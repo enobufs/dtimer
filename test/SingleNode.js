@@ -1,14 +1,8 @@
 
 var DTimer = require('..').DTimer;
-var logger = require('..').logger;
 var redis = require("redis");
 var async = require('async');
 var assert = require('assert');
-
-logger.debug = console.log;
-logger.warn = console.warn;
-logger.info = console.info;
-logger.error = console.error;
 
 describe('Single node', function () {
     var pub = null;

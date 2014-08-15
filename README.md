@@ -16,19 +16,25 @@ In a clustered server environment, you'd occasionally need to process a task aft
 
 ## API
 
-### Class
-* DTimer(id, pub, sub, [option])
-     * {string} id - Unique ID representing this node.
-     * {RedisClient} pub - Redis client (main operation)
-     * {RedisClient} sub - Redis client for subscribe
-     * {object} option Options.
-         * {string} option.ns Namespace to define a unique event notification domain. Defaults to 'dt'.
-         * {number} maxEvents The max number of maximum number of events this instance wants to received at a time. Defaults to 1.
+### Class / Constructor
+#### DTimer(id, pub, sub, [option])
+Inherits EventEmitter.
+
+* {string} id - Unique ID representing this node.
+* {RedisClient} pub - Redis client (main operation)
+* {RedisClient} sub - Redis client for subscribe
+* {object} option Options.
+    * {string} ns Namespace to define a unique event notification domain. Defaults to 'dt'.
+    * {number} maxEvents The max number of maximum number of events this instance wants to received at a time. Defaults to 1.
 
 ### Instance method
 * join(cb) - Start listening to events.
 * leave(cb)) - Stop listening to events.
 * post(ev, delay, cb) - Post an event.
+    * {object} ev - Event data.
+    * {number} delay - Delay value in milliseconds.
+
+### Event types
 * Event: 'event' - Emitted when an event is received.
 * Event: 'error' - Emitted when an error occurred.
 
@@ -55,3 +61,7 @@ dt.post({msg:'hello'}, 200, function (err) {
 		return;	}
 	// posted event successfully})
 ```
+
+# TODO
+1. Introduce 'cancel()' to cancel a specific event.
+2. Add more thorogh testing
