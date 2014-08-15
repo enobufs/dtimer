@@ -1,0 +1,36 @@
+{
+  "name": "dtimer",
+  "version": "0.0.1",
+  "description": "Distributed timer backed by Redis.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/enobufs/dtimer.git"
+  },
+  "dependencies": {
+    "underscore": "^1.6.0",
+    "redis": "^0.11.0",
+    "async": "^0.9.0",
+    "lured": "0.0.1"
+  },
+  "devDependencies": {
+    "mocha": "^1.21.0"
+  },
+  "keywords": [
+    "timer",
+    "timed",
+    "scheduler",
+    "event",
+    "cluster",
+    "redis"
+  ],
+  "author": "enobufs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/enobufs/dtimer/issues"
+  },
+  "homepage": "https://github.com/enobufs/dtimer"
+}
