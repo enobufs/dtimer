@@ -3,6 +3,7 @@
 Distributed timer backed by Redis.
 
 [![NPM](https://nodei.co/npm/dtimer.png)](https://nodei.co/npm/dtimer/)
+
 [![unstable](https://img.shields.io/badge/stability-unstable-yellowgreen.svg)](http://nodejs.org/api/documentation.html#documentation_stability_index)
 [![Build Status](https://travis-ci.org/enobufs/dtimer.svg?branch=master)](https://travis-ci.org/enobufs/dtimer) 
 
@@ -21,22 +22,29 @@ In a clustered server environment, you'd occasionally need to process a task aft
 ## API
 
 ### Class / Constructor
-#### DTimer(id, pub, sub, [option])
-Inherits EventEmitter.
-
+#### DTimer(id, pub, sub, [option]) - Inherits EventEmitter.
 * {string} id - Unique ID representing this node.
 * {RedisClient} pub - Redis client (main operation)
 * {RedisClient} sub - Redis client for subscribe
 * {object} option Options.
     * {string} ns Namespace to define a unique event notification domain. Defaults to 'dt'.
-    * {number} maxEvents The max number of maximum number of events this instance wants to received at a time. Defaults to 1.
+    * {number} maxEvents The maximum number of events this instance wants to received at a time. Defaults to 8. You may change this value later with the setter, `maxEvents`
 
 ### Instance method
-* join(cb) - Start listening to events.
+* join(cb) - Start listening to events. 
 * leave(cb)) - Stop listening to events.
 * post(ev, delay, cb) - Post an event.
     * {object} ev - Event data.
     * {number} delay - Delay value in milliseconds.
+    * {function} cb - Callback made when the post operation is complete. The callback function takes following args:
+        * {Error} err - Error object. Null is set on sucess.
+        * {number} evId - Event ID assigned to the posted event. The ID is used to cancel the event.
+* cancel(evId, cb) - Cancel an event by its event ID.
+    * {number} evId - The event ID obtained via the callback of post() method.
+
+### Instance member (getter/setter)
+* {number} maxEvents (getter&setter) - The max number of events this node can grab at a time. The attempt to set it to 0 or negative value result in setting it to the original value supplied in the option field, or the default (8).
+
 
 ### Event types
 * Event: 'event' - Emitted when an event is received.
@@ -49,9 +57,8 @@ var DTimer = require('dtimer').DTimer;
 var pub = redis.createClient();
 var sub = redis.createClient();
 var dt = new DTimer('ch1', pub, sub)
-dt.on('event', function (events) {
-	events.forEach(function (ev) {
-		// do something with ev	});})
+dt.on('event', function (ev) {
+	// do something with ev})
 dt.on('error', function (err) {
 	// handle error})
 dt.join(function (err) {
@@ -65,7 +72,3 @@ dt.post({msg:'hello'}, 200, function (err) {
 		return;	}
 	// posted event successfully})
 ```
-
-# TODO
-1. Introduce 'cancel()' to cancel a specific event.
-2. Add more thorogh testing

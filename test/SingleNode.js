@@ -55,7 +55,7 @@ describe('Single node', function () {
     });
 
     it('Post and receive one event', function (done) {
-        var ev = { msg: 'hello' };
+        var evt = { msg: 'hello' };
         var delay = 500;
         async.series([
         function (next) {
@@ -66,13 +66,13 @@ describe('Single node', function () {
         function (next) {
             var since = Date.now();
             var numEvents = 0;
-            dt.post(ev, delay, function (err, evId) {
+            dt.post(evt, delay, function (err) {
                 assert.ifError(err);
             });
-            dt.on('event', function (events) {
+            dt.on('event', function (ev) {
                 var elapsed = Date.now() - since;
                 numEvents++;
-                assert.deepEqual(events[0], ev);
+                assert.deepEqual(ev, evt);
                 assert(elapsed < delay * 1.1);
                 assert(elapsed > delay * 0.9);
             });
@@ -113,22 +113,21 @@ describe('Single node', function () {
         },
         function (next) {
             var since = Date.now();
-            evts.forEach(function (ev) {
-                dt.post(ev.msg, ev.delay, function (err, evId) {
-                    ev.id = evId;
-                    ev.postDelay = Date.now() - since;
-                    ev.posted = true;
+            evts.forEach(function (evt) {
+                dt.post(evt.msg, evt.delay, function (err, evId) {
+                    evt.id = evId;
+                    evt.postDelay = Date.now() - since;
+                    evt.posted = true;
                 });
             });
-            dt.on('event', function (events) {
+            dt.on('event', function (ev) {
                 var elapsed = Date.now() - since;
-                assert.equal(events.length, 1);
-                evts.forEach(function (ev) {
-                    if (ev.msg.msg === events[0].msg) {
+                evts.forEach(function (evt) {
+                    if (evt.msg.msg === ev.msg) {
                         numRcvd++;
-                        ev.elapsed = elapsed;
-                        ev.rcvd = events[0];
-                        ev.order = numRcvd;
+                        evt.elapsed = elapsed;
+                        evt.rcvd = ev;
+                        evt.order = numRcvd;
                     }
                 });
             });
@@ -140,12 +139,13 @@ describe('Single node', function () {
             });
         }], function (err, results) {
             void(results);
-            evts.forEach(function (ev) {
-                assert.ok(ev.posted);
-                assert.deepEqual(ev.msg, ev.rcvd);
-                assert(ev.elapsed < ev.delay + 200);
-                assert(ev.elapsed > ev.delay);
+            evts.forEach(function (evt) {
+                assert.ok(evt.posted);
+                assert.deepEqual(evt.msg, evt.rcvd);
+                assert(evt.elapsed < evt.delay + 200);
+                assert(evt.elapsed > evt.delay);
             });
+            assert.equal(numRcvd, evts.length);
             done(err);
         });
     });
@@ -164,7 +164,7 @@ describe('Single node', function () {
             { msg: { msg: 'msg9' }, delay: 50 }
         ];
         var numRcvd = 0;
-        dt.setMaxEvents(5);
+        dt.maxEvents = 5;
         async.series([
         function (next) {
             dt.join(function () {
@@ -173,26 +173,23 @@ describe('Single node', function () {
         },
         function (next) {
             var since = Date.now();
-            evts.forEach(function (ev) {
-                dt.post(ev.msg, ev.delay, function (err, evId) {
-                    ev.id = evId;
-                    ev.postDelay = Date.now() - since;
-                    ev.posted = true;
+            evts.forEach(function (evt) {
+                dt.post(evt.msg, evt.delay, function (err, evId) {
+                    evt.id = evId;
+                    evt.postDelay = Date.now() - since;
+                    evt.posted = true;
                 });
             });
-            dt.on('event', function (events) {
+            dt.on('event', function (ev) {
                 var elapsed = Date.now() - since;
-                assert.equal(events.length, 5);
-                for (var i = 0; i < events.length; ++i) {
-                    evts.forEach(function (ev) {
-                        if (ev.msg.msg === events[i].msg) {
-                            numRcvd++;
-                            ev.elapsed = elapsed;
-                            ev.rcvd = events[i];
-                            ev.order = numRcvd;
-                        }
-                    });
-                }
+                evts.forEach(function (evt) {
+                    if (evt.msg.msg === ev.msg) {
+                        numRcvd++;
+                        evt.elapsed = elapsed;
+                        evt.rcvd = ev;
+                        evt.order = numRcvd;
+                    }
+                });
             });
             setTimeout(next, 100);
         },
@@ -202,12 +199,49 @@ describe('Single node', function () {
             });
         }], function (err, results) {
             void(results);
-            evts.forEach(function (ev) {
-                assert.ok(ev.posted);
-                assert.deepEqual(ev.msg, ev.rcvd);
-                assert(ev.elapsed < ev.delay + 200);
-                assert(ev.elapsed > ev.delay);
+            evts.forEach(function (evt) {
+                assert.ok(evt.posted);
+                assert.deepEqual(evt.msg, evt.rcvd);
+                assert(evt.elapsed < evt.delay + 200);
+                assert(evt.elapsed > evt.delay);
             });
+            assert.equal(numRcvd, evts.length);
+            done(err);
+        });
+    });
+
+    it('Post then cancel', function (done) {
+        var evt = { msg: 'hello' };
+        var delay = 500;
+        async.series([
+        function (next) {
+            dt.join(function () {
+                next();
+            });
+        },
+        function (next) {
+            var since = Date.now();
+            var numEvents = 0;
+            dt.post(evt, delay, function (err, evId) {
+                assert.ifError(err);
+                dt.cancel(evId, function (err) {
+                    assert.ifError(err);
+                });
+            });
+            dt.on('event', function (ev) {
+                numEvents++;
+            });
+            setTimeout(function() {
+                assert.equal(numEvents, 0);
+                next();
+            }, 1000);
+        },
+        function (next) {
+            dt.leave(function () {
+                next();
+            });
+        }], function (err, results) {
+            void(results);
             done(err);
         });
     });

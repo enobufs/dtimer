@@ -69,7 +69,7 @@ describe('Multiple nodes', function () {
         nodes = [];
     });
 
-    it('Post 2 events then receives one each', function (done) {
+    it('MaxEvents 1 - each node receives 1 event', function (done) {
         var evts = [
             { msg: { msg: 'msg0' }, delay: 60 },
             { msg: { msg: 'msg1' }, delay: 60 },
@@ -81,6 +81,10 @@ describe('Multiple nodes', function () {
             { msg: { msg: 'msg7' }, delay: 60 }
         ];
         var numRcvd = 0;
+        // Set up each node to grab 1 event at a time.
+        nodes.forEach(function (node) {
+            node.dt.maxEvents = 1;
+        });
         async.series([
         function (next) {
             var numJoined = 0;
@@ -96,25 +100,24 @@ describe('Multiple nodes', function () {
         },
         function (next) {
             var since = Date.now();
-            evts.forEach(function (ev) {
-                nodes[0].dt.post(ev.msg, ev.delay, function (err, evId) {
-                    ev.id = evId;
-                    ev.postDelay = Date.now() - since;
-                    ev.posted = true;
+            evts.forEach(function (evt) {
+                nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
+                    evt.id = evId;
+                    evt.postDelay = Date.now() - since;
+                    evt.posted = true;
                 });
             });
             nodes.forEach(function (node) {
-                node.dt.on('event', function (events) {
+                node.dt.on('event', function (ev) {
                     node.numRcvd++;
                     var elapsed = Date.now() - since;
-                    assert.equal(events.length, 1);
-                    evts.forEach(function (ev) {
-                        if (ev.msg.msg === events[0].msg) {
+                    evts.forEach(function (evt) {
+                        if (evt.msg.msg === ev.msg) {
                             numRcvd++;
-                            ev.elapsed = elapsed;
-                            ev.rcvd = events[0];
-                            ev.rcvdBy = node.id;
-                            ev.order = numRcvd;
+                            evt.elapsed = elapsed;
+                            evt.rcvd = ev;
+                            evt.rcvdBy = node.id;
+                            evt.order = numRcvd;
                         }
                     });
                 });
@@ -140,14 +143,105 @@ describe('Multiple nodes', function () {
         }], function (err, results) {
             void(results);
             assert.ifError(err);
-            evts.forEach(function (ev) {
-                assert.ok(ev.posted);
-                assert.deepEqual(ev.msg, ev.rcvd);
-                assert(ev.elapsed < ev.delay + 200);
-                assert(ev.elapsed > ev.delay);
+            evts.forEach(function (evt) {
+                assert.ok(evt.posted);
+                assert.deepEqual(evt.msg, evt.rcvd);
+                assert(evt.elapsed < evt.delay + 200);
+                assert(evt.elapsed > evt.delay);
             });
+            assert.equal(numRcvd, evts.length);
             nodes.forEach(function (node) {
                 assert.equal(node.numRcvd, 1);
+            });
+            done();
+        });
+    });
+
+    it('MaxEvents 2 - each node receives 0 or 2 events', function (done) {
+        var evts = [
+            { msg: { msg: 'msg0' }, delay: 60 },
+            { msg: { msg: 'msg1' }, delay: 60 },
+            { msg: { msg: 'msg2' }, delay: 60 },
+            { msg: { msg: 'msg3' }, delay: 60 },
+            { msg: { msg: 'msg4' }, delay: 60 },
+            { msg: { msg: 'msg5' }, delay: 60 },
+            { msg: { msg: 'msg6' }, delay: 60 },
+            { msg: { msg: 'msg7' }, delay: 60 }
+        ];
+        var numRcvd = 0;
+        // Set up each node to grab 1 event at a time.
+        nodes.forEach(function (node) {
+            node.dt.maxEvents = 2;
+        });
+        async.series([
+        function (next) {
+            var numJoined = 0;
+            nodes.forEach(function (node) {
+                node.dt.join(function (err) {
+                    if (err) { return void(next(err)); }
+                    numJoined++;
+                    if (numJoined == nodes.length) {
+                        next();
+                    }
+                });
+            });
+        },
+        function (next) {
+            var since = Date.now();
+            evts.forEach(function (evt) {
+                nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
+                    evt.id = evId;
+                    evt.postDelay = Date.now() - since;
+                    evt.posted = true;
+                });
+            });
+            nodes.forEach(function (node) {
+                node.dt.on('event', function (ev) {
+                    node.numRcvd++;
+                    var elapsed = Date.now() - since;
+                    evts.forEach(function (evt) {
+                        if (evt.msg.msg === ev.msg) {
+                            numRcvd++;
+                            evt.elapsed = elapsed;
+                            evt.rcvd = ev;
+                            evt.rcvdBy = node.id;
+                            evt.order = numRcvd;
+                        }
+                    });
+                });
+            });
+            setTimeout(next, 100);
+        },
+        function (next) {
+            nodes[0].pub.llen('dt:ch', function (err, reply) {
+                assert.equal(reply, 8);
+                next();
+            });
+        },
+        function (next) {
+            var numLeft = 0;
+            nodes.forEach(function (node) {
+                node.dt.leave(function () {
+                    numLeft ++;
+                    if (numLeft === nodes.length) {
+                        next();
+                    }
+                });
+            });
+        }], function (err, results) {
+            void(results);
+            assert.ifError(err);
+            evts.forEach(function (evt) {
+                assert.ok(evt.posted);
+                assert.deepEqual(evt.msg, evt.rcvd);
+                assert(evt.elapsed < evt.delay + 200);
+                assert(evt.elapsed > evt.delay);
+            });
+            assert.equal(numRcvd, evts.length);
+            nodes.forEach(function (node) {
+                if (node.numRcvd > 0) {
+                    assert.equal(node.numRcvd, 2);
+                }
             });
             done();
         });
