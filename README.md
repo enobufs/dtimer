@@ -1,11 +1,10 @@
 # dtimer
-
-Distributed timer backed by Redis.
-
-[![NPM](https://nodei.co/npm/dtimer.png)](https://nodei.co/npm/dtimer/)
+[![NPM](https://nodei.co/npm/dtimer.png?compact=true)](https://nodei.co/npm/dtimer/)
 
 [![unstable](https://img.shields.io/badge/stability-unstable-yellowgreen.svg)](http://nodejs.org/api/documentation.html#documentation_stability_index)
 [![Build Status](https://travis-ci.org/enobufs/dtimer.svg?branch=master)](https://travis-ci.org/enobufs/dtimer) 
+
+Distributed timer backed by Redis.
 
 ## Why dtimer?
 In a clustered server environment, you'd occasionally need to process a task after a certain period of time. The setTimeout() may not be suitable because the process may die for whatever reason, the timed events would also be lost. Ideally, you'd want to store these timed events on a central strage, then have a cluster of listeners handle the due events. If you are already using Redis, then this dtimer would be a handy solution for you.
