@@ -4,7 +4,8 @@
   "description": "Distributed timer backed by Redis.",
   "main": "index.js",
   "scripts": {
-    "test": "DEBUG=dtimer mocha"
+    "test": "DEBUG=dtimer mocha",
+    "cover": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -R spec"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,9 @@
   },
   "devDependencies": {
     "async": "~0.9.0",
-    "mocha": "~1.21.0"
+    "mocha": "~1.21.0",
+    "istanbul": "~0.3.0",
+    "sinon": "~1.10.3"
   },
   "keywords": [
     "timer",

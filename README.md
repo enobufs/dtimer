@@ -7,7 +7,7 @@
 Distributed timer backed by Redis.
 
 ## Why dtimer?
-In a clustered server environment, you'd occasionally need to process a task after a certain period of time. The setTimeout() may not be suitable because the process may die for whatever reason, the timed events would also be lost. Ideally, you'd want to store these timed events on a central strage, then have a cluster of listeners handle the due events. If you are already using Redis, then this dtimer would be a handy solution for you.
+In a clustered server environment, you'd occasionally need to process a task after a certain period of time. The setTimeout() may not be suitable because the process may die for whatever reason, the timed events would also be lost. Ideally, you'd want to store these timed events on a central storage, then have a cluster of listeners handle the due events. If you are already using Redis, then this dtimer would be a handy solution for you.
 
 ## Installation
     $ npm install dtimer
@@ -65,9 +65,11 @@ dt.join(function (err) {
 		// join failed
 		return;	}
 	// join successfully})
-dt.post({msg:'hello'}, 200, function (err) {
+dt.post({msg:'hello'}, 200, function (err, evId) {
 	if (err) {
 		// failed to post event
 		return;	}
-	// posted event successfully})
+	// posted event successfully
+	// If you need to cancel this event, then do:
+	//dt.cancel(evId, function (err) {...});})
 ```
