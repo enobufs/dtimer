@@ -1,6 +1,6 @@
 {
   "name": "dtimer",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Distributed timer backed by Redis.",
   "main": "index.js",
   "scripts": {
