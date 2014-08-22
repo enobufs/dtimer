@@ -53,6 +53,7 @@ In a clustered server environment, you'd occasionally need to process a task aft
 
 ```js
 var DTimer = require('dtimer').DTimer;
+var redis = require('redis');
 var pub = redis.createClient();
 var sub = redis.createClient();
 var dt = new DTimer('ch1', pub, sub)
