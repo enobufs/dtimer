@@ -31,12 +31,12 @@ if numMaxEvents > 0 then
             table.insert(events, redis.call("HGET", KEYS[4], evIds[i]))
             redis.call("HDEL", KEYS[4], evIds[i])
         end
-    end
-    if redis.call("LINDEX", KEYS[2], numChs-1) == chId then
-        if numChs > 1 then
-            redis.call("RPOPLPUSH", KEYS[2], KEYS[2])
+        if redis.call("LINDEX", KEYS[2], numChs-1) == chId then
+            if numChs > 1 then
+                redis.call("RPOPLPUSH", KEYS[2], KEYS[2])
+            end
+            redis.call("HDEL", KEYS[1], "expiresAt")
         end
-        redis.call("HDEL", KEYS[1], "expiresAt")
     end
 end
 
