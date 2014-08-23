@@ -19,6 +19,7 @@ local numMaxEvents = tonumber(ARGV[3])
 local gracePeriod = tonumber(redis.call("HGET", KEYS[1], "gracePeriod"))
 local baseInterval = tonumber(redis.call("HGET", KEYS[1], "baseInterval"))
 local numChs = tonumber(redis.call("LLEN", KEYS[2]))
+local defaultInterval = numChs * baseInterval
 
 redis.log(redis.LOG_DEBUG,"numChs=" .. numChs)
 
@@ -53,22 +54,24 @@ else
             notify = false
         end
     end
-    if notify then
+    if numChs > 0 and notify then
         local interval = 0
         if nexp > now then
             interval = nexp - now
         end
-        while numChs > 0 do
-            chId = redis.call("LINDEX", KEYS[2], numChs-1)
-            local ret = redis.call("PUBLISH", chId, '{"interval":' .. interval .. '}')
-            if ret > 0 then
-                redis.call("HSET", KEYS[1], "expiresAt", nexp);
-                break
+        if interval + gracePeriod < defaultInterval then
+            while numChs > 0 do
+                chId = redis.call("LINDEX", KEYS[2], numChs-1)
+                local ret = redis.call("PUBLISH", chId, '{"interval":' .. interval .. '}')
+                if ret > 0 then
+                    redis.call("HSET", KEYS[1], "expiresAt", nexp);
+                    break
+                end
+                redis.call("RPOP", KEYS[2]);
+                numChs = tonumber(redis.call("LLEN", KEYS[2]));
             end
-            redis.call("RPOP", KEYS[2]);
-            numChs = tonumber(redis.call("LLEN", KEYS[2]));
         end
     end
 end
 
-return {events, numChs*baseInterval}
+return {events, defaultInterval}
