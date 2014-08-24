@@ -1,14 +1,11 @@
+'use strict';
 
 var DTimer = require('..').DTimer;
 var redis = require("redis");
-var async = require('async');
 var assert = require('assert');
 var sinon = require('sinon');
 
 describe('ApiTests', function () {
-    var pub = null;
-    var sub = null;
-    var dt  = null;
     var sandbox = sinon.sandbox.create();
     var clock;
 
@@ -29,7 +26,8 @@ describe('ApiTests', function () {
 
     it('The pub should not be null', function () {
         assert.throws(function () {
-            new DTimer('me', null);
+            var dt = new DTimer('me', null);
+            void(dt);
         },
         function (err) {
             return (err instanceof Error);
@@ -43,7 +41,8 @@ describe('ApiTests', function () {
         var sub = redis.createClient();
         function shouldThrow(id) {
             assert.throws(function () {
-                new DTimer(id, pub, sub);
+                var dt = new DTimer(id, pub, sub);
+                void(dt);
             },
             function (err) {
                 return (err instanceof Error);

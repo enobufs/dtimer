@@ -1,3 +1,4 @@
+'use strict';
 
 var DTimer = require('..').DTimer;
 var redis = require("redis");
@@ -86,61 +87,62 @@ describe('Multiple nodes', function () {
             node.dt.maxEvents = 1;
         });
         async.series([
-        function (next) {
-            var numJoined = 0;
-            nodes.forEach(function (node) {
-                node.dt.join(function (err) {
-                    if (err) { return void(next(err)); }
-                    numJoined++;
-                    if (numJoined == nodes.length) {
-                        next();
-                    }
-                });
-            });
-        },
-        function (next) {
-            var since = Date.now();
-            evts.forEach(function (evt) {
-                nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
-                    evt.id = evId;
-                    evt.postDelay = Date.now() - since;
-                    evt.posted = true;
-                });
-            });
-            nodes.forEach(function (node) {
-                node.dt.on('event', function (ev) {
-                    node.numRcvd++;
-                    var elapsed = Date.now() - since;
-                    evts.forEach(function (evt) {
-                        if (evt.msg.msg === ev.msg) {
-                            numRcvd++;
-                            evt.elapsed = elapsed;
-                            evt.rcvd = ev;
-                            evt.rcvdBy = node.id;
-                            evt.order = numRcvd;
+            function (next) {
+                var numJoined = 0;
+                nodes.forEach(function (node) {
+                    node.dt.join(function (err) {
+                        if (err) { return void(next(err)); }
+                        numJoined++;
+                        if (numJoined === nodes.length) {
+                            next();
                         }
                     });
                 });
-            });
-            setTimeout(next, 100);
-        },
-        function (next) {
-            nodes[0].pub.llen('dt:ch', function (err, reply) {
-                assert.equal(reply, 8);
-                next();
-            });
-        },
-        function (next) {
-            var numLeft = 0;
-            nodes.forEach(function (node) {
-                node.dt.leave(function () {
-                    numLeft ++;
-                    if (numLeft === nodes.length) {
-                        next();
-                    }
+            },
+            function (next) {
+                var since = Date.now();
+                evts.forEach(function (evt) {
+                    nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
+                        evt.id = evId;
+                        evt.postDelay = Date.now() - since;
+                        evt.posted = true;
+                    });
                 });
-            });
-        }], function (err, results) {
+                nodes.forEach(function (node) {
+                    node.dt.on('event', function (ev) {
+                        node.numRcvd++;
+                        var elapsed = Date.now() - since;
+                        evts.forEach(function (evt) {
+                            if (evt.msg.msg === ev.msg) {
+                                numRcvd++;
+                                evt.elapsed = elapsed;
+                                evt.rcvd = ev;
+                                evt.rcvdBy = node.id;
+                                evt.order = numRcvd;
+                            }
+                        });
+                    });
+                });
+                setTimeout(next, 100);
+            },
+            function (next) {
+                nodes[0].pub.llen('dt:ch', function (err, reply) {
+                    assert.equal(reply, 8);
+                    next();
+                });
+            },
+            function (next) {
+                var numLeft = 0;
+                nodes.forEach(function (node) {
+                    node.dt.leave(function () {
+                        numLeft ++;
+                        if (numLeft === nodes.length) {
+                            next();
+                        }
+                    });
+                });
+            }
+        ], function (err, results) {
             void(results);
             assert.ifError(err);
             evts.forEach(function (evt) {
@@ -174,61 +176,62 @@ describe('Multiple nodes', function () {
             node.dt.maxEvents = 2;
         });
         async.series([
-        function (next) {
-            var numJoined = 0;
-            nodes.forEach(function (node) {
-                node.dt.join(function (err) {
-                    if (err) { return void(next(err)); }
-                    numJoined++;
-                    if (numJoined == nodes.length) {
-                        next();
-                    }
-                });
-            });
-        },
-        function (next) {
-            var since = Date.now();
-            evts.forEach(function (evt) {
-                nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
-                    evt.id = evId;
-                    evt.postDelay = Date.now() - since;
-                    evt.posted = true;
-                });
-            });
-            nodes.forEach(function (node) {
-                node.dt.on('event', function (ev) {
-                    node.numRcvd++;
-                    var elapsed = Date.now() - since;
-                    evts.forEach(function (evt) {
-                        if (evt.msg.msg === ev.msg) {
-                            numRcvd++;
-                            evt.elapsed = elapsed;
-                            evt.rcvd = ev;
-                            evt.rcvdBy = node.id;
-                            evt.order = numRcvd;
+            function (next) {
+                var numJoined = 0;
+                nodes.forEach(function (node) {
+                    node.dt.join(function (err) {
+                        if (err) { return void(next(err)); }
+                        numJoined++;
+                        if (numJoined === nodes.length) {
+                            next();
                         }
                     });
                 });
-            });
-            setTimeout(next, 100);
-        },
-        function (next) {
-            nodes[0].pub.llen('dt:ch', function (err, reply) {
-                assert.equal(reply, 8);
-                next();
-            });
-        },
-        function (next) {
-            var numLeft = 0;
-            nodes.forEach(function (node) {
-                node.dt.leave(function () {
-                    numLeft ++;
-                    if (numLeft === nodes.length) {
-                        next();
-                    }
+            },
+            function (next) {
+                var since = Date.now();
+                evts.forEach(function (evt) {
+                    nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
+                        evt.id = evId;
+                        evt.postDelay = Date.now() - since;
+                        evt.posted = true;
+                    });
                 });
-            });
-        }], function (err, results) {
+                nodes.forEach(function (node) {
+                    node.dt.on('event', function (ev) {
+                        node.numRcvd++;
+                        var elapsed = Date.now() - since;
+                        evts.forEach(function (evt) {
+                            if (evt.msg.msg === ev.msg) {
+                                numRcvd++;
+                                evt.elapsed = elapsed;
+                                evt.rcvd = ev;
+                                evt.rcvdBy = node.id;
+                                evt.order = numRcvd;
+                            }
+                        });
+                    });
+                });
+                setTimeout(next, 100);
+            },
+            function (next) {
+                nodes[0].pub.llen('dt:ch', function (err, reply) {
+                    assert.equal(reply, 8);
+                    next();
+                });
+            },
+            function (next) {
+                var numLeft = 0;
+                nodes.forEach(function (node) {
+                    node.dt.leave(function () {
+                        numLeft ++;
+                        if (numLeft === nodes.length) {
+                            next();
+                        }
+                    });
+                });
+            }
+        ], function (err, results) {
             void(results);
             assert.ifError(err);
             evts.forEach(function (evt) {

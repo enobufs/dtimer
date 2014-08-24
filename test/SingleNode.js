@@ -1,3 +1,4 @@
+'use strict';
 
 var DTimer = require('..').DTimer;
 var redis = require("redis");
@@ -35,7 +36,7 @@ describe('Single node', function () {
                         pub.flushdb(next);
                     }
                 ], function (err) {
-                    if (err) { return void(done(err)); };
+                    if (err) { return void(done(err)); }
                     dt = new DTimer('ch1', pub, sub);
                     done();
                 });
@@ -58,34 +59,35 @@ describe('Single node', function () {
         var evt = { msg: 'hello' };
         var delay = 500;
         async.series([
-        function (next) {
-            dt.join(function () {
-                next();
-            });
-        },
-        function (next) {
-            var since = Date.now();
-            var numEvents = 0;
-            dt.post(evt, delay, function (err) {
-                assert.ifError(err);
-            });
-            dt.on('event', function (ev) {
-                var elapsed = Date.now() - since;
-                numEvents++;
-                assert.deepEqual(ev, evt);
-                assert(elapsed < delay * 1.1);
-                assert(elapsed > delay * 0.9);
-            });
-            setTimeout(function() {
-                assert.equal(numEvents, 1);
-                next();
-            }, 1000);
-        },
-        function (next) {
-            dt.leave(function () {
-                next();
-            });
-        }], function (err, results) {
+            function (next) {
+                dt.join(function () {
+                    next();
+                });
+            },
+            function (next) {
+                var since = Date.now();
+                var numEvents = 0;
+                dt.post(evt, delay, function (err) {
+                    assert.ifError(err);
+                });
+                dt.on('event', function (ev) {
+                    var elapsed = Date.now() - since;
+                    numEvents++;
+                    assert.deepEqual(ev, evt);
+                    assert(elapsed < delay * 1.1);
+                    assert(elapsed > delay * 0.9);
+                });
+                setTimeout(function() {
+                    assert.equal(numEvents, 1);
+                    next();
+                }, 1000);
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
             void(results);
             done(err);
         });
@@ -106,38 +108,39 @@ describe('Single node', function () {
         ];
         var numRcvd = 0;
         async.series([
-        function (next) {
-            dt.join(function () {
-                next();
-            });
-        },
-        function (next) {
-            var since = Date.now();
-            evts.forEach(function (evt) {
-                dt.post(evt.msg, evt.delay, function (err, evId) {
-                    evt.id = evId;
-                    evt.postDelay = Date.now() - since;
-                    evt.posted = true;
+            function (next) {
+                dt.join(function () {
+                    next();
                 });
-            });
-            dt.on('event', function (ev) {
-                var elapsed = Date.now() - since;
+            },
+            function (next) {
+                var since = Date.now();
                 evts.forEach(function (evt) {
-                    if (evt.msg.msg === ev.msg) {
-                        numRcvd++;
-                        evt.elapsed = elapsed;
-                        evt.rcvd = ev;
-                        evt.order = numRcvd;
-                    }
+                    dt.post(evt.msg, evt.delay, function (err, evId) {
+                        evt.id = evId;
+                        evt.postDelay = Date.now() - since;
+                        evt.posted = true;
+                    });
                 });
-            });
-            setTimeout(next, 100);
-        },
-        function (next) {
-            dt.leave(function () {
-                next();
-            });
-        }], function (err, results) {
+                dt.on('event', function (ev) {
+                    var elapsed = Date.now() - since;
+                    evts.forEach(function (evt) {
+                        if (evt.msg.msg === ev.msg) {
+                            numRcvd++;
+                            evt.elapsed = elapsed;
+                            evt.rcvd = ev;
+                            evt.order = numRcvd;
+                        }
+                    });
+                });
+                setTimeout(next, 100);
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
             void(results);
             evts.forEach(function (evt) {
                 assert.ok(evt.posted);
@@ -166,38 +169,39 @@ describe('Single node', function () {
         var numRcvd = 0;
         dt.maxEvents = 5;
         async.series([
-        function (next) {
-            dt.join(function () {
-                next();
-            });
-        },
-        function (next) {
-            var since = Date.now();
-            evts.forEach(function (evt) {
-                dt.post(evt.msg, evt.delay, function (err, evId) {
-                    evt.id = evId;
-                    evt.postDelay = Date.now() - since;
-                    evt.posted = true;
+            function (next) {
+                dt.join(function () {
+                    next();
                 });
-            });
-            dt.on('event', function (ev) {
-                var elapsed = Date.now() - since;
+            },
+            function (next) {
+                var since = Date.now();
                 evts.forEach(function (evt) {
-                    if (evt.msg.msg === ev.msg) {
-                        numRcvd++;
-                        evt.elapsed = elapsed;
-                        evt.rcvd = ev;
-                        evt.order = numRcvd;
-                    }
+                    dt.post(evt.msg, evt.delay, function (err, evId) {
+                        evt.id = evId;
+                        evt.postDelay = Date.now() - since;
+                        evt.posted = true;
+                    });
                 });
-            });
-            setTimeout(next, 100);
-        },
-        function (next) {
-            dt.leave(function () {
-                next();
-            });
-        }], function (err, results) {
+                dt.on('event', function (ev) {
+                    var elapsed = Date.now() - since;
+                    evts.forEach(function (evt) {
+                        if (evt.msg.msg === ev.msg) {
+                            numRcvd++;
+                            evt.elapsed = elapsed;
+                            evt.rcvd = ev;
+                            evt.order = numRcvd;
+                        }
+                    });
+                });
+                setTimeout(next, 100);
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
             void(results);
             evts.forEach(function (evt) {
                 assert.ok(evt.posted);
@@ -214,33 +218,34 @@ describe('Single node', function () {
         var evt = { msg: 'hello' };
         var delay = 500;
         async.series([
-        function (next) {
-            dt.join(function () {
-                next();
-            });
-        },
-        function (next) {
-            var since = Date.now();
-            var numEvents = 0;
-            dt.post(evt, delay, function (err, evId) {
-                assert.ifError(err);
-                dt.cancel(evId, function (err) {
-                    assert.ifError(err);
+            function (next) {
+                dt.join(function () {
+                    next();
                 });
-            });
-            dt.on('event', function (ev) {
-                numEvents++;
-            });
-            setTimeout(function() {
-                assert.equal(numEvents, 0);
-                next();
-            }, 1000);
-        },
-        function (next) {
-            dt.leave(function () {
-                next();
-            });
-        }], function (err, results) {
+            },
+            function (next) {
+                var numEvents = 0;
+                dt.post(evt, delay, function (err, evId) {
+                    assert.ifError(err);
+                    dt.cancel(evId, function (err) {
+                        assert.ifError(err);
+                    });
+                });
+                dt.on('event', function (ev) {
+                    numEvents++;
+                    assert.deepEqual(ev, evt);
+                });
+                setTimeout(function() {
+                    assert.equal(numEvents, 0);
+                    next();
+                }, 1000);
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
             void(results);
             done(err);
         });
