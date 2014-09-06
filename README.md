@@ -1,8 +1,8 @@
 # dtimer
-[![NPM](https://nodei.co/npm/dtimer.png?compact=true)](https://nodei.co/npm/dtimer/)
 
-[![unstable](https://img.shields.io/badge/stability-unstable-yellowgreen.svg)](http://nodejs.org/api/documentation.html#documentation_stability_index)
+[![NPM version](https://badge.fury.io/js/dtimer.svg)](http://badge.fury.io/js/dtimer)
 [![Build Status](https://travis-ci.org/enobufs/dtimer.svg?branch=master)](https://travis-ci.org/enobufs/dtimer) 
+[![Coverage Status](https://coveralls.io/repos/enobufs/dtimer/badge.png?branch=master)](https://coveralls.io/r/enobufs/dtimer?branch=master)
 
 Distributed timer backed by Redis.
 
@@ -13,10 +13,12 @@ In a clustered server environment, you'd occasionally need to process a task aft
     $ npm install dtimer
 
 ## Features
-* Realizes scheduler using Redis.
-* Supports one or more event listener across cluster. (round robin)
+* Timed event emitter and listener across cluster using Redis.
+* Supports one or more event listeners across cluster. (round robin)
 * Pubsub based event notification (low delay and low network bandwidth usage.)
 
+## Requirements
+* Requires Redis version 2.6.0 or later (dtimer uses lua)
 
 ## API
 
