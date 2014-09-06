@@ -5,3 +5,7 @@ node_js:
   - "0.8"
 services:
   - redis-server
+script:
+  - npm run cover
+after_success: 
+  - cat ./coverage/lcov.info |./node_modules/coveralls/bin/coveralls.js
