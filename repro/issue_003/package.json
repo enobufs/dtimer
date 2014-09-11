@@ -1,0 +1,16 @@
+{
+  "name": "issue_003",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "DEBUG=issue_003 node test"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "redis": "^0.12.1",
+    "debug": "^2.0.0",
+    "date-utils": "^1.2.16"
+  }
+}
