@@ -108,6 +108,7 @@ describe('Error tests', function () {
             cb(new Error('fail error'));
         });
         dt.on('error', function (err) {
+            assert.ok(err);
             done();
         });
         dt._onTimeout();
@@ -200,5 +201,57 @@ describe('Error tests', function () {
         });
 
         dt._onTimeout();
+    });
+
+    describe('#upcoming', function () {
+        beforeEach(function (done) {
+            dt.join(done);
+        });
+
+        it('force _redisTime return error', function (done) {
+            sandbox.stub(dt, '_redisTime', function (c, cb) {
+                void(c);
+                cb(new Error('fake error'));
+            });
+            dt.upcoming(function (err) {
+                assert.ok(err);
+                done();
+            });
+        });
+
+        it('force _pub.zrangebyscore return error', function (done) {
+            sandbox.stub(dt._pub, 'zrangebyscore', function (args, cb) {
+                void(args);
+                cb(new Error('fake error'));
+            });
+            dt.upcoming(function (err) {
+                assert.ok(err);
+                done();
+            });
+        });
+
+        it('force _pub.hmget return error', function (done) {
+            async.series([
+                function (next) {
+                    dt.post({ msg: 'bye' }, 1000, next);
+                },
+                function (next) {
+                    sandbox.stub(dt._pub, 'hmget', function (args, cb) {
+                        void(args);
+                        cb(new Error('fake error'));
+                    });
+
+                    dt.upcoming(function (err) {
+                        assert.ok(err);
+                        next();
+                    });
+                },
+                function (next) {
+                    dt.leave(function () {
+                        next();
+                    });
+                }
+            ], done);
+        });
     });
 });

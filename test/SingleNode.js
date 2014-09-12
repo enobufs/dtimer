@@ -4,6 +4,7 @@ var DTimer = require('..').DTimer;
 var redis = require("redis");
 var async = require('async');
 var assert = require('assert');
+var debug = require('debug')('dtimer');
 
 describe('Single node', function () {
     var pub = null;
@@ -248,6 +249,222 @@ describe('Single node', function () {
         ], function (err, results) {
             void(results);
             done(err);
+        });
+    });
+
+    describe('#upcoming', function () {
+        beforeEach(function (done) {
+            dt.join(done);
+        });
+
+        function post3events(ev1, ev2, ev3, ids, cb) {
+            async.series([
+                function (next) {
+                    debug('post 1..');
+                    dt.post(ev1, 1000, function (err, evId) {
+                        assert.ifError(err);
+                        ids.push(evId);
+                        next();
+                    });
+                },
+                function (next) {
+                    debug('post 2..');
+                    dt.post(ev2, 2000, function (err, evId) {
+                        assert.ifError(err);
+                        ids.push(evId);
+                        next();
+                    });
+                },
+                function (next) {
+                    debug('post 3..');
+                    dt.post(ev3, 3000, function (err, evId) {
+                        assert.ifError(err);
+                        ids.push(evId);
+                        next();
+                    });
+                }
+            ], cb);
+        }
+
+        it('upcoming() with no event', function (done) {
+            var ids = [];
+            var events;
+            async.series([
+                function (next) {
+                    debug('upcoming..');
+                    dt.upcoming(function (err, _events) {
+                        assert.ifError(err);
+                        events = _events;
+                        next();
+                    });
+                },
+                function (next) {
+                    dt.leave(function () {
+                        next();
+                    });
+                }
+            ], function (err) {
+                debug('events=' + JSON.stringify(events, null, 2));
+                assert.ifError(err);
+                assert.strictEqual(ids.length, 0);
+                assert.strictEqual(Object.keys(events).length, 0);
+                done();
+            });
+        });
+
+        it('upcoming() to retrieve all events', function (done) {
+            var evt = { msg: 'hello' };
+            var ids = [];
+            var events;
+            async.series([
+                function (next) {
+                    debug('posting..');
+                    post3events(evt, evt, evt, ids, next);
+                },
+                function (next) {
+                    debug('upcoming..');
+                    dt.upcoming(function (err, _events) {
+                        assert.ifError(err);
+                        events = _events;
+                        next();
+                    });
+                },
+                function (next) {
+                    dt.leave(function () {
+                        next();
+                    });
+                }
+            ], function (err) {
+                debug('events=' + JSON.stringify(events, null, 2));
+                assert.ifError(err);
+                assert.strictEqual(ids.length, 3);
+                assert.strictEqual(Object.keys(events).length, 3);
+                done();
+            });
+        });
+
+        it('upcoming() to retrieve just 2 events using limit', function (done) {
+            var evt = { msg: 'hello' };
+            var ids = [];
+            var events;
+            async.series([
+                function (next) {
+                    debug('posting..');
+                    post3events(evt, evt, evt, ids, next);
+                },
+                function (next) {
+                    debug('upcoming..');
+                    dt.upcoming({ limit: 2 }, function (err, _events) {
+                        assert.ifError(err);
+                        events = _events;
+                        next();
+                    });
+                },
+                function (next) {
+                    dt.leave(function () {
+                        next();
+                    });
+                }
+            ], function (err) {
+                debug('events=' + JSON.stringify(events, null, 2));
+                assert.ifError(err);
+                assert.strictEqual(ids.length, 3);
+                assert.strictEqual(Object.keys(events).length, 2);
+                done();
+            });
+        });
+
+        it('upcoming() to retrieve just 1 event using duration', function (done) {
+            var evt = { msg: 'hello' };
+            var ids = [];
+            var events;
+            async.series([
+                function (next) {
+                    debug('posting..');
+                    post3events(evt, evt, evt, ids, next);
+                },
+                function (next) {
+                    debug('upcoming..');
+                    dt.upcoming({ duration: 1100 }, function (err, _events) {
+                        assert.ifError(err);
+                        events = _events;
+                        next();
+                    });
+                },
+                function (next) {
+                    dt.leave(function () {
+                        next();
+                    });
+                }
+            ], function (err) {
+                debug('events=' + JSON.stringify(events, null, 2));
+                assert.ifError(err);
+                assert.strictEqual(ids.length, 3);
+                assert.strictEqual(Object.keys(events).length, 1);
+                done();
+            });
+        });
+
+        it('upcoming() to retrieve just 2 event using offset', function (done) {
+            var evt = { msg: 'hello' };
+            var ids = [];
+            var events;
+            async.series([
+                function (next) {
+                    debug('posting..');
+                    post3events(evt, evt, evt, ids, next);
+                },
+                function (next) {
+                    debug('upcoming..');
+                    dt.upcoming({ offset: 1100 }, function (err, _events) {
+                        assert.ifError(err);
+                        events = _events;
+                        next();
+                    });
+                },
+                function (next) {
+                    dt.leave(function () {
+                        next();
+                    });
+                }
+            ], function (err) {
+                debug('events=' + JSON.stringify(events, null, 2));
+                assert.ifError(err);
+                assert.strictEqual(ids.length, 3);
+                assert.strictEqual(Object.keys(events).length, 2);
+                done();
+            });
+        });
+
+        it('upcoming() to retrieve just 1 event using both offset and duration', function (done) {
+            var evt = { msg: 'hello' };
+            var ids = [];
+            var events;
+            async.series([
+                function (next) {
+                    debug('posting..');
+                    post3events(evt, evt, evt, ids, next);
+                },
+                function (next) {
+                    debug('upcoming..');
+                    dt.upcoming({ offset: 1100, duration: 1000 }, function (err, _events) {
+                        assert.ifError(err);
+                        events = _events;
+                        next();
+                    });
+                },
+                function (next) {
+                    dt.leave(function () {
+                        next();
+                    });
+                }
+            ], function (err) {
+                debug('events=' + JSON.stringify(events, null, 2));
+                assert.ifError(err);
+                assert.strictEqual(ids.length, 3);
+                assert.strictEqual(Object.keys(events).length, 1);
+                done();
+            });
         });
     });
 });

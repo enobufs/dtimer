@@ -42,6 +42,33 @@ In a clustered server environment, you'd occasionally need to process a task aft
         * {number} evId - Event ID assigned to the posted event. The ID is used to cancel the event.
 * cancel(evId, cb) - Cancel an event by its event ID.
     * {number} evId - The event ID obtained via the callback of post() method.
+* upcoming([option], cb) - Retrieve upcoming events. This method is provided for diagnostic purpose only and the use of this method in production is hightly discouraged unless the number of events retrieved is reasonably small. Cost of this operation is O(N), where N is the number events that would be retrieved.
+    * {object} option - Options
+        * {number} offset Offset expiration time in msec from which events are retrieved . This defaults to the current (redis-server) time (-1).
+        * {number} duration Time length [msec] from offset time for which events are trieved. This defaults to '+inf' (-1).
+        * {number} limit Maximum number of events to be retrieved. This defaults to `no limit` (-1)
+    * {function} cb - Callback made when upcoming operation is complete. The callback function takes following args:
+         * {Error} err - Error object. Null is set on success.
+         * {object} events - List of objects that met the given criteria.
+Example of retrieved events by upcoming():
+
+```
+{
+    "2": {
+        "expireAt": 1410502530320,
+        "event": {
+            "msg": "hello"
+        }
+    },
+    "3": {
+        "expireAt": 1410502531321,
+        "event": {
+            "msg": "hello"
+        }
+    }
+}
+```
+
 
 ### Instance member (getter/setter)
 * {number} maxEvents (getter&setter) - The max number of events this node can grab at a time. The attempt to set it to 0 or negative value result in setting it to the original value supplied in the option field, or the default (8).
