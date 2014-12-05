@@ -42,7 +42,7 @@ In a clustered server environment, you'd occasionally need to process a task aft
         * {number} evId - Event ID assigned to the posted event. The ID is used to cancel the event.
 * cancel(evId, cb) - Cancel an event by its event ID.
     * {number} evId - The event ID obtained via the callback of post() method.
-* upcoming([option], cb) - Retrieve upcoming events. This method is provided for diagnostic purpose only and the use of this method in production is hightly discouraged unless the number of events retrieved is reasonably small. Cost of this operation is O(N), where N is the number events that would be retrieved.
+* upcoming([option], cb) - Retrieve upcoming events. This method is provided for diagnostic purpose only and the use of this method in production is highly discouraged unless the number of events retrieved is reasonably small. Cost of this operation is O(N), where N is the number events that would be retrieved.
     * {object} option - Options
         * {number} offset Offset expiration time in msec from which events are retrieved . This defaults to the current (redis-server) time (-1).
         * {number} duration Time length [msec] from offset time for which events are trieved. This defaults to '+inf' (-1).
@@ -103,3 +103,8 @@ dt.post({msg:'hello'}, 200, function (err, evId) {
 	// If you need to cancel this event, then do:
 	//dt.cancel(evId, function (err) {...});})
 ```
+## Tips
+
+* You do not have to join to post. By calling `join()`, you are declaring yourself as a listener to consume due events.
+* Under the hood, more than one event may be retrieved. You may change the maximum number of events (using the setter, DTimer#maxEvents) to be retrieved at once to optimize memory usage and/or overall performance.
+* To control incoming event traffic, use DTimer#leave() and then DTimer#join() again. Note that you may still receive some events after calling leave() if there are remaing events inside DTimer that have already been received from Redis.
