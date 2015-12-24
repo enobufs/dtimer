@@ -36,12 +36,13 @@ In a clustered server environment, you'd occasionally need to process a task aft
 * leave(cb)) - Stop listening to events.
 * post(ev, delay, cb) - Post an event.
     * {object} ev - Event data.
+        * {string} [ev.id] - User provided event ID. If not present, dtimer will automatically assigned an ID using uuid.
     * {number} delay - Delay value in milliseconds.
     * {function} cb - Callback made when the post operation is complete. The callback function takes following args:
         * {Error} err - Error object. Null is set on sucess.
-        * {number} evId - Event ID assigned to the posted event. The ID is used to cancel the event.
+        * {string} evId - Event ID assigned to the posted event. The ID is used to cancel the event.
 * cancel(evId, cb) - Cancel an event by its event ID.
-    * {number} evId - The event ID obtained via the callback of post() method.
+    * {string} evId - The event ID obtained via the callback of post() method.
 * upcoming([option], cb) - Retrieve upcoming events. This method is provided for diagnostic purpose only and the use of this method in production is highly discouraged unless the number of events retrieved is reasonably small. Cost of this operation is O(N), where N is the number events that would be retrieved.
     * {object} option - Options
         * {number} offset Offset expiration time in msec from which events are retrieved . This defaults to the current (redis-server) time (-1).
@@ -54,13 +55,13 @@ Example of retrieved events by upcoming():
 
 ```
 {
-    "2": {
+    "25723fdd-4434-4cbd-b579-4693e221ec73": {
         "expireAt": 1410502530320,
         "event": {
             "msg": "hello"
         }
     },
-    "3": {
+    "24bbef35-8014-4107-803c-5ff4b858a5ad": {
         "expireAt": 1410502531321,
         "event": {
             "msg": "hello"
@@ -87,21 +88,28 @@ var pub = redis.createClient();
 var sub = redis.createClient();
 var dt = new DTimer('ch1', pub, sub)
 dt.on('event', function (ev) {
-	// do something with ev})
+	// do something with ev
+})
 dt.on('error', function (err) {
-	// handle error})
+	// handle error
+})
 dt.join(function (err) {
 	if (err) {
 		// join failed
-		return;	}
-	// join successfully})
-dt.post({msg:'hello'}, 200, function (err, evId) {
+		return;
+	}
+	// join successfully
+})
+dt.post({id: 'myId', msg:'hello'}, 200, function (err, evId) {
 	if (err) {
 		// failed to post event
-		return;	}
+		return;
+	}
 	// posted event successfully
 	// If you need to cancel this event, then do:
-	//dt.cancel(evId, function (err) {...});})
+	//dt.cancel('myId', function (err) {...});
+    // Note: evId === 'myId'
+})
 ```
 ## Tips
 
