@@ -117,14 +117,14 @@ describe('Error tests', function () {
     it('#join - multi error', function (done) {
         sandbox.stub(pub, 'multi', function () {
             var m = {
-                lrem:   function() { return this; },
-                lpush:  function() { return this; },
-                zadd:   function() { return this; },
-                zrem:   function() { return this; },
-                hset:   function() { return this; },
-                hdel:   function() { return this; },
-                evalsha:function() { return this; },
-                exec: function(cb) {
+                lrem:   function () { return this; },
+                lpush:  function () { return this; },
+                zadd:   function () { return this; },
+                zrem:   function () { return this; },
+                hset:   function () { return this; },
+                hdel:   function () { return this; },
+                evalsha:function () { return this; },
+                exec: function (cb) {
                     process.nextTick(function () {
                         cb(new Error('fake err'));
                     });
@@ -139,28 +139,17 @@ describe('Error tests', function () {
         });
     });
 
-    it('#post - hincrby error', function (done) {
-        sandbox.stub(pub, 'hincrby', function (key, field, by, cb) {
-            cb(new Error('fake error'));
-        });
-
-        dt.post({}, 200, function (err) {
-            assert.ok(err);
-            done();
-        });
-    });
-
     it('#post - multi error', function (done) {
         sandbox.stub(pub, 'multi', function () {
             var m = {
-                lrem:   function() { return this; },
-                lpush:  function() { return this; },
-                zadd:   function() { return this; },
-                zrem:   function() { return this; },
-                hset:   function() { return this; },
-                hdel:   function() { return this; },
-                evalsha:function() { return this; },
-                exec: function(cb) {
+                lrem:   function () { return this; },
+                lpush:  function () { return this; },
+                zadd:   function () { return this; },
+                zrem:   function () { return this; },
+                hset:   function () { return this; },
+                hdel:   function () { return this; },
+                evalsha:function () { return this; },
+                exec: function (cb) {
                     process.nextTick(function () {
                         cb(new Error('fake err'));
                     });

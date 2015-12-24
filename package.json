@@ -4,25 +4,28 @@
   "description": "Distributed timer backed by Redis.",
   "main": "index.js",
   "scripts": {
-    "test": "DEBUG=dtimer mocha",
-    "cover": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -R spec"
+    "test": "DEBUG=dtimer istanbul cover _mocha",
+    "posttest": "eslint lib test; istanbul check-coverage",
+    "lint": "eslint lib test"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/enobufs/dtimer.git"
   },
   "dependencies": {
-    "underscore": "~1.6.0",
-    "redis": "~0.12.1",
+    "debug": "~1.0.4",
     "lured": "~0.0.2",
-    "debug": "~1.0.4"
+    "redis": "~0.12.1",
+    "underscore": "~1.6.0",
+    "uuid": "^2.0.1"
   },
   "devDependencies": {
     "async": "~0.9.0",
-    "mocha": "~1.21.0",
+    "coveralls": "~2.11.1",
+    "eslint": "^1.10.3",
     "istanbul": "~0.3.0",
-    "sinon": "~1.10.3",
-    "coveralls": "~2.11.1"
+    "mocha": "~1.21.0",
+    "sinon": "~1.10.3"
   },
   "keywords": [
     "timer",
@@ -37,5 +40,94 @@
   "bugs": {
     "url": "https://github.com/enobufs/dtimer/issues"
   },
-  "homepage": "https://github.com/enobufs/dtimer"
+  "homepage": "https://github.com/enobufs/dtimer",
+  "eslintConfig": {
+    "rules": {
+      "callback-return": [
+        2,
+        [
+          "callback",
+          "cb",
+          "next",
+          "done"
+        ]
+      ],
+      "camelcase": [
+        2,
+        {
+          "properties": "never"
+        }
+      ],
+      "comma-dangle": 0,
+      "comma-spacing": [
+        2,
+        {
+          "before": false,
+          "after": true
+        }
+      ],
+      "indent": [
+        2,
+        4,
+        {
+          "SwitchCase": 1
+        }
+      ],
+      "linebreak-style": [
+        2,
+        "unix"
+      ],
+      "max-len": [
+        1,
+        120,
+        4,
+        {
+          "ignoreComments": true,
+          "ignoreUrls": true
+        }
+      ],
+      "no-console": 0,
+      "no-extra-boolean-cast": [
+        0
+      ],
+      "no-new": 2,
+      "no-spaced-func": [
+        2
+      ],
+      "no-trailing-spaces": [
+        2
+      ],
+      "no-unused-vars": [
+        2,
+        {
+          "args": "all"
+        }
+      ],
+      "no-use-before-define": [
+        2,
+        "nofunc"
+      ],
+      "semi": [
+        2,
+        "always"
+      ],
+      "space-after-keywords": [
+        2,
+        "always"
+      ],
+      "space-before-function-paren": [
+        2,
+        {
+          "anonymous": "always",
+          "named": "never"
+        }
+      ],
+      "space-return-throw-case": 2
+    },
+    "env": {
+      "node": true,
+      "mocha": true
+    },
+    "extends": "eslint:recommended"
+  }
 }

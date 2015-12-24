@@ -94,7 +94,7 @@ describe('Multiple nodes', function () {
                         if (err) { return void(next(err)); }
                         numJoined++;
                         if (numJoined === nodes.length) {
-                            next();
+                            return next();
                         }
                     });
                 });
@@ -103,6 +103,7 @@ describe('Multiple nodes', function () {
                 var since = Date.now();
                 evts.forEach(function (evt) {
                     nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
+                        assert.ifError(err);
                         evt.id = evId;
                         evt.postDelay = Date.now() - since;
                         evt.posted = true;
@@ -127,6 +128,7 @@ describe('Multiple nodes', function () {
             },
             function (next) {
                 nodes[0].pub.llen('dt:ch', function (err, reply) {
+                    assert.ifError(err);
                     assert.equal(reply, 8);
                     next();
                 });
@@ -137,7 +139,7 @@ describe('Multiple nodes', function () {
                     node.dt.leave(function () {
                         numLeft ++;
                         if (numLeft === nodes.length) {
-                            next();
+                            return next();
                         }
                     });
                 });
@@ -183,7 +185,7 @@ describe('Multiple nodes', function () {
                         if (err) { return void(next(err)); }
                         numJoined++;
                         if (numJoined === nodes.length) {
-                            next();
+                            return next();
                         }
                     });
                 });
@@ -192,6 +194,7 @@ describe('Multiple nodes', function () {
                 var since = Date.now();
                 evts.forEach(function (evt) {
                     nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
+                        assert.ifError(err);
                         evt.id = evId;
                         evt.postDelay = Date.now() - since;
                         evt.posted = true;
@@ -216,6 +219,7 @@ describe('Multiple nodes', function () {
             },
             function (next) {
                 nodes[0].pub.llen('dt:ch', function (err, reply) {
+                    assert.ifError(err);
                     assert.equal(reply, 8);
                     next();
                 });
@@ -226,7 +230,7 @@ describe('Multiple nodes', function () {
                     node.dt.leave(function () {
                         numLeft ++;
                         if (numLeft === nodes.length) {
-                            next();
+                            return next();
                         }
                     });
                 });

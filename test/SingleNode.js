@@ -78,7 +78,46 @@ describe('Single node', function () {
                     assert(elapsed < delay * 1.1);
                     assert(elapsed > delay * 0.9);
                 });
-                setTimeout(function() {
+                setTimeout(function () {
+                    assert.equal(numEvents, 1);
+                    next();
+                }, 1000);
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
+            void(results);
+            done(err);
+        });
+    });
+
+    it('Post and receive one event with id', function (done) {
+        var evt = { id: 'my_event', msg: 'hello' };
+        var delay = 500;
+        async.series([
+            function (next) {
+                dt.join(function () {
+                    next();
+                });
+            },
+            function (next) {
+                var since = Date.now();
+                var numEvents = 0;
+                dt.post(evt, delay, function (err, evId) {
+                    assert.ifError(err);
+                    assert.equal(evId, evt.id);
+                });
+                dt.on('event', function (ev) {
+                    var elapsed = Date.now() - since;
+                    numEvents++;
+                    assert.deepEqual(ev, evt);
+                    assert(elapsed < delay * 1.1);
+                    assert(elapsed > delay * 0.9);
+                });
+                setTimeout(function () {
                     assert.equal(numEvents, 1);
                     next();
                 }, 1000);
@@ -118,6 +157,7 @@ describe('Single node', function () {
                 var since = Date.now();
                 evts.forEach(function (evt) {
                     dt.post(evt.msg, evt.delay, function (err, evId) {
+                        assert.ifError(err);
                         evt.id = evId;
                         evt.postDelay = Date.now() - since;
                         evt.posted = true;
@@ -179,6 +219,7 @@ describe('Single node', function () {
                 var since = Date.now();
                 evts.forEach(function (evt) {
                     dt.post(evt.msg, evt.delay, function (err, evId) {
+                        assert.ifError(err);
                         evt.id = evId;
                         evt.postDelay = Date.now() - since;
                         evt.posted = true;
@@ -236,7 +277,7 @@ describe('Single node', function () {
                     numEvents++;
                     assert.deepEqual(ev, evt);
                 });
-                setTimeout(function() {
+                setTimeout(function () {
                     assert.equal(numEvents, 0);
                     next();
                 }, 1000);

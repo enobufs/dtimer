@@ -11,7 +11,6 @@
  --   {number} Next (suggested) interval in milliseconds.
 redis.call("HSETNX", KEYS[1], "gracePeriod", 20)
 redis.call("HSETNX", KEYS[1], "baseInterval", 1000)
-redis.call("HSETNX", KEYS[1], "eventId", 0)
 local events = {}
 local chId = ARGV[1]
 local now = tonumber(ARGV[2])
