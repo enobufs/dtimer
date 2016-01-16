@@ -120,17 +120,6 @@ describe('Error tests', function () {
         });
     });
 
-    it('#confirm', function (done) {
-        sandbox.stub(dt, '_callOnReady', function (cb) {
-            cb(new Error('fail error'));
-        });
-
-        dt.confirm('myEvent', function (err) {
-            assert.ok(err);
-            done();
-        });
-    });
-
     it('#confirm - error with time command', function (done) {
         sandbox.stub(pub, 'time', function (cb) {
             cb(new Error('fail error'));
@@ -154,17 +143,6 @@ describe('Error tests', function () {
         });
 
         dt.confirm('myEvent', function (err) {
-            assert.ok(err);
-            done();
-        });
-    });
-
-    it('#changeDelay', function (done) {
-        sandbox.stub(dt, '_callOnReady', function (cb) {
-            cb(new Error('fail error'));
-        });
-
-        dt.changeDelay('myEvent', 1000, function (err) {
             assert.ok(err);
             done();
         });
