@@ -259,4 +259,19 @@ describe('ApiTests', function () {
             dt.post({ id: 666 /*bad*/ }, 1000, function () {});
         }, Error);
     });
+
+    it('Attempts to post with invalid maxRetries should throw', function () {
+        sandbox.stub(require('lured'), 'create', function () {
+            return {
+                on: function () {},
+                load: function (cb) { process.nextTick(cb); },
+                state: 3
+            };
+        });
+        var pub = redis.createClient();
+        var dt = new DTimer('me', pub, null);
+        assert.throws(function () {
+            dt.post({ id: 'should throw', maxRetries: true /*bad*/ }, 1000, function () {});
+        }, Error);
+    });
 });

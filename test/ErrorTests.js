@@ -41,7 +41,7 @@ describe('Error tests', function () {
                 ], function (err) {
                     if (err) { return void(done(err)); }
                     dt = new DTimer('ch1', pub, sub);
-                    done();
+                    setTimeout(done, 100); // wait loading to complete
                 });
             }
         );
@@ -98,6 +98,101 @@ describe('Error tests', function () {
         });
 
         dt.cancel(3, function (err) {
+            assert.ok(err);
+            done();
+        });
+    });
+
+    it('#cancel - multi error', function (done) {
+        sandbox.stub(pub, 'multi', function () {
+            var multi = {
+                evalsha: function () { return multi; },
+                exec: function (cb) {
+                    cb(new Error('fake error'));
+                }
+            };
+            return multi;
+        });
+
+        dt.cancel('myEvent', function (err) {
+            assert.ok(err);
+            done();
+        });
+    });
+
+    it('#confirm', function (done) {
+        sandbox.stub(dt, '_callOnReady', function (cb) {
+            cb(new Error('fail error'));
+        });
+
+        dt.confirm('myEvent', function (err) {
+            assert.ok(err);
+            done();
+        });
+    });
+
+    it('#confirm - error with time command', function (done) {
+        sandbox.stub(pub, 'time', function (cb) {
+            cb(new Error('fail error'));
+        });
+
+        dt.confirm('myEvent', function (err) {
+            assert.ok(err);
+            done();
+        });
+    });
+
+    it('#confirm - multi error', function (done) {
+        sandbox.stub(pub, 'multi', function () {
+            var multi = {
+                evalsha: function () { return multi; },
+                exec: function (cb) {
+                    cb(new Error('fake error'));
+                }
+            };
+            return multi;
+        });
+
+        dt.confirm('myEvent', function (err) {
+            assert.ok(err);
+            done();
+        });
+    });
+
+    it('#changeDelay', function (done) {
+        sandbox.stub(dt, '_callOnReady', function (cb) {
+            cb(new Error('fail error'));
+        });
+
+        dt.changeDelay('myEvent', 1000, function (err) {
+            assert.ok(err);
+            done();
+        });
+    });
+
+    it('#changeDelay - error with time command', function (done) {
+        sandbox.stub(pub, 'time', function (cb) {
+            cb(new Error('fail error'));
+        });
+
+        dt.changeDelay('myEvent', 1000, function (err) {
+            assert.ok(err);
+            done();
+        });
+    });
+
+    it('#changeDelay - multi error', function (done) {
+        sandbox.stub(pub, 'multi', function () {
+            var multi = {
+                evalsha: function () { return multi; },
+                exec: function (cb) {
+                    cb(new Error('fake error'));
+                }
+            };
+            return multi;
+        });
+
+        dt.changeDelay('myEvent', 1000, function (err) {
             assert.ok(err);
             done();
         });
@@ -171,7 +266,7 @@ describe('Error tests', function () {
             done();
         });
         sandbox.stub(pub, 'evalsha', function () {
-            var cb = arguments[9];
+            var cb = arguments[11];
             cb(new Error('fail error'));
         });
 
@@ -185,7 +280,7 @@ describe('Error tests', function () {
             done();
         });
         sandbox.stub(pub, 'evalsha', function () {
-            var cb = arguments[9];
+            var cb = arguments[11];
             cb(null, [ ['{bad]'], 1234]);
         });
 

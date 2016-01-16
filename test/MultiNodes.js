@@ -34,7 +34,7 @@ describe('Multiple nodes', function () {
             ], function (err) {
                 if (err) { return void(cb(err)); }
                 node.dt = new DTimer('ch' + id, node.pub, node.sub);
-                cb(null, node);
+                setTimeout(function () { cb(null, node); }, 100);
             });
         }
 
@@ -149,7 +149,7 @@ describe('Multiple nodes', function () {
             assert.ifError(err);
             evts.forEach(function (evt) {
                 assert.ok(evt.posted);
-                assert.deepEqual(evt.msg, evt.rcvd);
+                assert.deepEqual(evt.msg.msg, evt.rcvd.msg);
                 assert(evt.elapsed < evt.delay + 200);
                 assert(evt.elapsed > evt.delay);
             });
@@ -240,7 +240,7 @@ describe('Multiple nodes', function () {
             assert.ifError(err);
             evts.forEach(function (evt) {
                 assert.ok(evt.posted);
-                assert.deepEqual(evt.msg, evt.rcvd);
+                assert.deepEqual(evt.msg.msg, evt.rcvd.msg);
                 assert(evt.elapsed < evt.delay + 200);
                 assert(evt.elapsed > evt.delay);
             });

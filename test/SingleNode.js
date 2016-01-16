@@ -38,7 +38,7 @@ describe('Single node', function () {
                     }
                 ], function (err) {
                     if (err) { return void(done(err)); }
-                    dt = new DTimer('ch1', pub, sub);
+                    dt = new DTimer('ch1', pub, sub, { confTimeout: 1 });
                     done();
                 });
             }
@@ -74,7 +74,7 @@ describe('Single node', function () {
                 dt.on('event', function (ev) {
                     var elapsed = Date.now() - since;
                     numEvents++;
-                    assert.deepEqual(ev, evt);
+                    assert.deepEqual(ev.msg, evt.msg);
                     assert(elapsed < delay * 1.1);
                     assert(elapsed > delay * 0.9);
                 });
@@ -95,7 +95,7 @@ describe('Single node', function () {
     });
 
     it('Post and receive one event with id', function (done) {
-        var evt = { id: 'my_event', msg: 'hello' };
+        var evt = { id: 'my_event', maxRetries: 0, msg: 'hello' };
         var delay = 500;
         async.series([
             function (next) {
@@ -113,7 +113,7 @@ describe('Single node', function () {
                 dt.on('event', function (ev) {
                     var elapsed = Date.now() - since;
                     numEvents++;
-                    assert.deepEqual(ev, evt);
+                    assert.strictEqual(ev.msg, evt.msg);
                     assert(elapsed < delay * 1.1);
                     assert(elapsed > delay * 0.9);
                 });
@@ -185,7 +185,7 @@ describe('Single node', function () {
             void(results);
             evts.forEach(function (evt) {
                 assert.ok(evt.posted);
-                assert.deepEqual(evt.msg, evt.rcvd);
+                assert.strictEqual(evt.msg.msg, evt.rcvd.msg);
                 assert(evt.elapsed < evt.delay + 200);
                 assert(evt.elapsed > evt.delay);
             });
@@ -247,7 +247,7 @@ describe('Single node', function () {
             void(results);
             evts.forEach(function (evt) {
                 assert.ok(evt.posted);
-                assert.deepEqual(evt.msg, evt.rcvd);
+                assert.deepEqual(evt.msg.msg, evt.rcvd.msg);
                 assert(evt.elapsed < evt.delay + 200);
                 assert(evt.elapsed > evt.delay);
             });
@@ -281,6 +281,143 @@ describe('Single node', function () {
                     assert.equal(numEvents, 0);
                     next();
                 }, 1000);
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
+            void(results);
+            done(err);
+        });
+    });
+
+    it('Post with confirmation', function (done) {
+        var evt = { id: 'myEvent', maxRetries: 1, msg: 'hello' };
+        var delay = 500;
+        async.series([
+            function (next) {
+                dt.join(function () {
+                    next();
+                });
+            },
+            function (next) {
+                var since = Date.now();
+                var numEvents = 0;
+                dt.post(evt, delay, function (err, evId) {
+                    assert.ifError(err);
+                    assert.equal(evId, evt.id);
+                });
+                dt.on('event', function (ev) {
+                    var elapsed = Date.now() - since;
+                    numEvents++;
+                    assert.equal(numEvents, 1);
+                    assert.strictEqual(ev.id, evt.id);
+                    assert.strictEqual(ev.msg, evt.msg);
+                    assert(elapsed < delay * 1.1);
+                    assert(elapsed > delay * 0.9);
+
+                    dt.confirm(ev.id, next);
+                });
+            },
+            function (next) {
+                setTimeout(next, 3000); // run for a while
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
+            void(results);
+            done(err);
+        });
+    });
+
+    it('Post, ignore 1st & 2nd events, then confirm the 3rd', function (done) {
+        var evt = { id: 'myEvent', maxRetries: 2, msg: 'hello' };
+        var delay = 500;
+        async.series([
+            function (next) {
+                dt.join(function () {
+                    next();
+                });
+            },
+            function (next) {
+                var since = Date.now();
+                var numEvents = 0;
+                dt.post(evt, delay, function (err, evId) {
+                    assert.ifError(err);
+                    assert.equal(evId, evt.id);
+                });
+                dt.on('event', function (ev) {
+                    var elapsed = Date.now() - since;
+                    numEvents++;
+                    assert.strictEqual(ev.id, evt.id);
+                    assert.strictEqual(ev.msg, evt.msg);
+                    if (numEvents === 1) {
+                        assert(elapsed < delay * 1.1);
+                        assert(elapsed > delay * 0.9);
+                    } else if (numEvents === 2) {
+                        assert.equal(ev._numRetries, 1);
+                    } else if (numEvents === 3) {
+                        assert.equal(ev._numRetries, 2);
+                        dt.confirm(ev.id, next);
+                    } else {
+                        assert(false, 'unexpected event');
+                    }
+                });
+            },
+            function (next) {
+                setTimeout(next, 2000); // run for a while
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
+            void(results);
+            done(err);
+        });
+    });
+
+    it('Post then change delay', function (done) {
+        var evt = { id: 'myEvent', msg: 'hello' };
+        var delay = 500;
+        async.series([
+            function (next) {
+                dt.join(function () {
+                    next();
+                });
+            },
+            function (next) {
+                var since = Date.now();
+                var numEvents = 0;
+                dt.post(evt, 5000, function (err, evId) {
+                    assert.ifError(err);
+                    assert.equal(evId, evt.id);
+
+                    // change delay right away
+                    dt.changeDelay(evId, delay, function (err, ok) {
+                        assert.ifError(err);
+                        assert.strictEqual(ok, 1);
+                    });
+                });
+                dt.on('event', function (ev) {
+                    var elapsed = Date.now() - since;
+                    numEvents++;
+                    assert.equal(numEvents, 1);
+                    assert.strictEqual(ev.id, evt.id);
+                    assert.strictEqual(ev.msg, evt.msg);
+                    assert(elapsed < delay * 1.1);
+                    assert(elapsed > delay * 0.9);
+                    next();
+                });
+            },
+            function (next) {
+                setTimeout(next, 2000); // run for a while
             },
             function (next) {
                 dt.leave(function () {
