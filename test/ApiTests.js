@@ -165,66 +165,6 @@ describe('ApiTests', function () {
         });
     });
 
-    it('join()/leave() should fail when lured state does not change in 30 secs', function (done) {
-        sandbox.stub(require('lured'), 'create', function () {
-            return {
-                on: function () {},
-                load: function (cb) { process.nextTick(cb); },
-                state: 1
-            };
-        });
-        var pub = redis.createClient();
-        var sub = redis.createClient();
-        var numErrs = 0;
-        clock = sinon.useFakeTimers();
-        var dt = new DTimer('me', pub, sub);
-        dt.join(function (err) {
-            assert.ok(err instanceof Error);
-            numErrs++;
-            if (numErrs === 2) {
-                return done();
-            }
-        });
-        dt.leave(function (err) {
-            assert.ok(err instanceof Error);
-            numErrs++;
-            if (numErrs === 2) {
-                return done();
-            }
-        });
-        clock.tick(30*1000);
-    });
-
-    it('post()/cancel() should fail when lured state does not change in 30 secs', function (done) {
-        sandbox.stub(require('lured'), 'create', function () {
-            return {
-                on: function () {},
-                load: function (cb) { process.nextTick(cb); },
-                state: 1
-            };
-        });
-        var pub = redis.createClient();
-        var sub = redis.createClient();
-        var numErrs = 0;
-        clock = sinon.useFakeTimers();
-        var dt = new DTimer('me', pub, sub);
-        dt.post({msg:'hi'}, 1000, function (err) {
-            assert.ok(err instanceof Error);
-            numErrs++;
-            if (numErrs === 2) {
-                return done();
-            }
-        });
-        dt.cancel(9, function (err) {
-            assert.ok(err instanceof Error);
-            numErrs++;
-            if (numErrs === 2) {
-                return done();
-            }
-        });
-        clock.tick(30*1000);
-    });
-
     it('Attempts to post non-object event should throw', function () {
         sandbox.stub(require('lured'), 'create', function () {
             return {
