@@ -1,10 +1,11 @@
 'use strict';
 
 var DTimer = require('..').DTimer;
-var redis = require("redis");
 var async = require('async');
 var assert = require('assert');
 var debug = require('debug')('dtimer');
+var Promise = require('bluebird');
+var redis = Promise.promisifyAll(require("redis"));
 
 describe('Single node', function () {
     var pub = null;

@@ -13,6 +13,7 @@
     "url": "git://github.com/enobufs/dtimer.git"
   },
   "dependencies": {
+    "bluebird": "^3.1.1",
     "debug": "~1.0.4",
     "lured": "~0.0.2",
     "redis": "~0.12.1",

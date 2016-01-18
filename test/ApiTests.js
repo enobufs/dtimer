@@ -1,9 +1,10 @@
 'use strict';
 
 var DTimer = require('..').DTimer;
-var redis = require("redis");
 var assert = require('assert');
 var sinon = require('sinon');
+var Promise = require('bluebird');
+var redis = Promise.promisifyAll(require("redis"));
 
 describe('ApiTests', function () {
     var sandbox = sinon.sandbox.create();
