@@ -19,6 +19,11 @@ In a clustered server environment, you'd occasionally need to process a task aft
 
 ## Requirements
 * Requires Redis version 2.6.0 or later (dtimer uses lua)
+* The redis module NUST be promisified at module level in advance, even legacy callback style is used.
+```js
+var Promise = require('bluebird');
+var redis = Promise.promisifyAll(require('redis'));
+```
 
 ## API
 
@@ -31,6 +36,8 @@ In a clustered server environment, you'd occasionally need to process a task aft
     * {string} ns Namespace to define a unique event notification domain. Defaults to 'dt'.
     * {number} maxEvents The maximum number of events this instance wants to received at a time. Defaults to 8. You may change this value later with the setter, `maxEvents`
     * {number} confTimeout Confirmation wait timeout in seconds. Defaults to 10 [sec].
+
+> The redis module MUST be promsified before instantiating clients for `pub` and `sub`. See the example below.
 
 ### Instance method
 #### join() - Start listening to events. 
