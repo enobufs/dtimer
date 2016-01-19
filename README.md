@@ -30,28 +30,99 @@ In a clustered server environment, you'd occasionally need to process a task aft
 * {object} option Options.
     * {string} ns Namespace to define a unique event notification domain. Defaults to 'dt'.
     * {number} maxEvents The maximum number of events this instance wants to received at a time. Defaults to 8. You may change this value later with the setter, `maxEvents`
+    * {number} confTimeout Confirmation wait timeout in seconds. Defaults to 10 [sec].
 
 ### Instance method
-* join(cb) - Start listening to events. 
-* leave(cb)) - Stop listening to events.
-* post(ev, delay, cb) - Post an event.
+#### join() - Start listening to events. 
+```
+join([cb]) => {Promise}
+    * cb {function} Optional callback.
+    * returns Promise if cb is not supplied.
+```
+
+#### leave() - Stop listening to events.
+```
+leave([cb]) => {Promise}
+    * cb {function} Optional callback.
+    * returns Promise if cb is not supplied.
+```
+
+#### post() - Post an event.
+```
+post(ev, delay [, cb]) => {Promise}
     * {object} ev - Event data.
-        * {string} [ev.id] - User provided event ID. If not present, dtimer will automatically assigned an ID using uuid.
+        * {string} [ev.id] - User provided event ID. If not present, dtimer will automatically
+          assign an ID using uuid.
+        * {number} [ev.maxRetries] - Maximum number of retries that occur if confirm() is not
+          made within confTimeout [sec]. If not present, it defaults to 0 (no retry).
     * {number} delay - Delay value in milliseconds.
-    * {function} cb - Callback made when the post operation is complete. The callback function takes following args:
+    * {function} [cb] - Callback made when the post operation is complete. The callback function
+      takes following args:
         * {Error} err - Error object. Null is set on sucess.
-        * {string} evId - Event ID assigned to the posted event. The ID is used to cancel the event.
-* cancel(evId, cb) - Cancel an event by its event ID.
-    * {string} evId - The event ID obtained via the callback of post() method.
-* upcoming([option], cb) - Retrieve upcoming events. This method is provided for diagnostic purpose only and the use of this method in production is highly discouraged unless the number of events retrieved is reasonably small. Cost of this operation is O(N), where N is the number events that would be retrieved.
+        * {string} evId - Event ID assigned to the posted event. If ev object already had id
+          property, this evId is identical to ev.id always.
+    * returns Promise if cb is not supplied.
+```
+
+> The `ev` object may have user-defined properties as its own properties, however, the following properties are reserved and used by dtimer; 'id', 'maxRetries' and '_numRetries'. If your appkication needs to use these names (for application specific use), then consider putting all user-defined event object inside the `ev` like this:
+
+```js
+{
+    id: '25723fdd-4434-4cbd-b579-4693e221ec73',
+    maxRetries: 3,
+    // _numRetries: 0 // added by dtimer before the event was fired
+    data: { /*...*/ } // user-defined event object
+}
+```
+
+
+#### cancel() - Cancel an event by its event ID.
+```
+cancel(evId [, cb])
+    * {string} evId - The event ID to be cancelled.
+    * {function} [cb] - Callback made when the operation is complete.
+    * returns Promise if cb is not supplied.
+        * Resolved value {number} 0: the event ID not found. 1: the event has been cancelled.
+```
+
+#### confirm() - Confirm that specified event has been processed.
+```
+confirm(evId [, cb])
+    * {string} evId - The event ID to be cancelled.
+    * {function} [cb] - Callback made when the operation is complete.
+    * returns Promise if cb is not supplied.
+        * Resolved value {number} 0: the event ID not found. 1: the event has been confirmed.
+```
+
+#### changeDelay() - Cancel an event by its event ID.
+```
+changeDelay(evId, delay, [, cb])
+    * {string} evId - The event ID to be cancelled.
+    * {number} delay - New delay (in milliseconds from now).
+    * {function} [cb] - Callback made when the operation is complete.
+    * returns Promise if cb is not supplied.
+        * Resolved value {number} 0: the event ID not found. 1: the delay has been updated.
+```
+
+#### upcoming() - Retrieve upcoming events.
+This method is provided for diagnostic purpose only and the use of this method in production is highly discouraged unless the number of events retrieved is reasonably small. Cost of this operation is O(N), where N is the number events that would be retrieved.
+```
+upcoming([option] [, cb]) => {Promise}
     * {object} option - Options
-        * {number} offset Offset expiration time in msec from which events are retrieved . This defaults to the current (redis-server) time (-1).
-        * {number} duration Time length [msec] from offset time for which events are trieved. This defaults to '+inf' (-1).
-        * {number} limit Maximum number of events to be retrieved. This defaults to `no limit` (-1)
-    * {function} cb - Callback made when upcoming operation is complete. The callback function takes following args:
+        * {number} offset Offset expiration time in msec from which events are retrieved.
+          This defaults to the current (redis-server) time (-1).
+        * {number} duration Time length [msec] from offset time for which events are
+          retrieved. This defaults to '+inf' (-1).
+        * {number} limit Maximum number of events to be retrieved. This defaults to
+          `no limit` (-1).
+    * {function} [cb] - Callback made when upcoming operation is complete.
+      The callback function takes following args:
          * {Error} err - Error object. Null is set on success.
          * {object} events - List of objects that met the given criteria.
-Example of retrieved events by upcoming():
+    * returns Promise if cb is not supplied.
+```
+
+##### Example of retrieved events by upcoming():
 
 ```
 {
@@ -76,14 +147,30 @@ Example of retrieved events by upcoming():
 
 
 ### Event types
-* Event: 'event' - Emitted when an event is received.
-* Event: 'error' - Emitted when an error occurred.
+
+#### Event: 'event' - Emitted when an event is received.
+The handler will be called with the following argument:
+
+```
+* ev {object} Event object.
+* ev.id {string} Event ID.
+* ev.maxRetries {number} Max retries specified when this event was posted.
+* ev._numRetries {number} Number of retries made before this event occured.
+```
+
+#### Event: 'error' - Emitted when an error occurred.
+The handler will be called with the following argument:
+
+```
+* err {Error} Error object.
+```
 
 ## Example
 
 ```js
 var DTimer = require('dtimer').DTimer;
-var redis = require('redis');
+var Promise = require('bluebird');
+var redis = Promise.promisifyAll(require('redis')); // module level promisification
 var pub = redis.createClient();
 var sub = redis.createClient();
 var dt = new DTimer('ch1', pub, sub)
@@ -100,19 +187,19 @@ dt.join(function (err) {
 	}
 	// join successfully
 })
-dt.post({id: 'myId', msg:'hello'}, 200, function (err, evId) {
+dt.post({id: 'myId', maxRetries: 3, msg:'hello'}, 200, function (err) {
 	if (err) {
 		// failed to post event
 		return;
 	}
-	// posted event successfully
+	// posted the event successfully
 	// If you need to cancel this event, then do:
 	//dt.cancel('myId', function (err) {...});
-    // Note: evId === 'myId'
 })
 ```
+
 ## Tips
 
 * You do not have to join to post. By calling `join()`, you are declaring yourself as a listener to consume due events.
 * Under the hood, more than one event may be retrieved. You may change the maximum number of events (using the setter, DTimer#maxEvents) to be retrieved at once to optimize memory usage and/or overall performance.
-* To control incoming event traffic, use DTimer#leave() and then DTimer#join() again. Note that you may still receive some events after calling leave() if there are remaing events inside DTimer that have already been received from Redis.
+* To control incoming event traffic, use DTimer#leave() and then DTimer#join() again. Note that you may still receive some events after calling leave() if there are remaining events inside DTimer that have already been received from Redis.
