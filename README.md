@@ -86,26 +86,26 @@ post(ev, delay [, cb]) => {Promise}
 #### cancel() - Cancel an event by its event ID.
 ```
 cancel(evId [, cb])
-    * {string} evId - The event ID to be cancelled.
+    * {string} evId - The event ID to be canceled.
     * {function} [cb] - Callback made when the operation is complete.
     * returns Promise if cb is not supplied.
-        * Resolved value {number} 0: the event ID not found. 1: the event has been cancelled.
+        * Resolved value {number} 0: the event ID not found. 1: the event has been canceled.
 ```
 
 #### confirm() - Confirm that specified event has been processed.
 ```
 confirm(evId [, cb])
-    * {string} evId - The event ID to be cancelled.
+    * {string} evId - The event ID to be canceled.
     * {function} [cb] - Callback made when the operation is complete.
     * returns Promise if cb is not supplied.
         * Resolved value {number} 0: the event ID not found. 1: the event has been confirmed.
 ```
 
-#### changeDelay() - Cancel an event by its event ID.
+#### changeDelay() - Change delay of specified event.
 ```
 changeDelay(evId, delay, [, cb])
-    * {string} evId - The event ID to be cancelled.
-    * {number} delay - New delay (in milliseconds from now).
+    * {string} evId - The event ID for which the delay will be changed.
+    * {number} delay - New delay (in milliseconds relative to the current time).
     * {function} [cb] - Callback made when the operation is complete.
     * returns Promise if cb is not supplied.
         * Resolved value {number} 0: the event ID not found. 1: the delay has been updated.
