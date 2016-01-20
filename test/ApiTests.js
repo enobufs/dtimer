@@ -1,9 +1,10 @@
 'use strict';
 
 var DTimer = require('..').DTimer;
-var redis = require("redis");
 var assert = require('assert');
 var sinon = require('sinon');
+var Promise = require('bluebird');
+var redis = Promise.promisifyAll(require("redis"));
 
 describe('ApiTests', function () {
     var sandbox = sinon.sandbox.create();
@@ -85,7 +86,7 @@ describe('ApiTests', function () {
     });
 
     it('emits error when lured.load() fails', function (done) {
-        sandbox.stub(require('lured'), 'create', function() {
+        sandbox.stub(require('lured'), 'create', function () {
             return {
                 on: function () {},
                 load: function (cb) {
@@ -104,7 +105,7 @@ describe('ApiTests', function () {
     });
 
     it('Detect malformed message on subscribe', function (done) {
-        sandbox.stub(require('lured'), 'create', function() {
+        sandbox.stub(require('lured'), 'create', function () {
             return {
                 on: function () {},
                 load: function (cb) { process.nextTick(cb); }
@@ -120,7 +121,7 @@ describe('ApiTests', function () {
     });
 
     it('Ignore invalid interval in pubsub message', function () {
-        sandbox.stub(require('lured'), 'create', function() {
+        sandbox.stub(require('lured'), 'create', function () {
             return {
                 on: function () {},
                 load: function (cb) { process.nextTick(cb); }
@@ -136,7 +137,7 @@ describe('ApiTests', function () {
     });
 
     it('join() should fail without sub', function (done) {
-        sandbox.stub(require('lured'), 'create', function() {
+        sandbox.stub(require('lured'), 'create', function () {
             return {
                 on: function () {},
                 load: function (cb) { process.nextTick(cb); }
@@ -151,7 +152,7 @@ describe('ApiTests', function () {
     });
 
     it('leave() should fail without sub', function (done) {
-        sandbox.stub(require('lured'), 'create', function() {
+        sandbox.stub(require('lured'), 'create', function () {
             return {
                 on: function () {},
                 load: function (cb) { process.nextTick(cb); }
@@ -165,68 +166,8 @@ describe('ApiTests', function () {
         });
     });
 
-    it('join()/leave() should fail when lured state does not change in 30 secs', function (done) {
-        sandbox.stub(require('lured'), 'create', function() {
-            return {
-                on: function () {},
-                load: function (cb) { process.nextTick(cb); },
-                state: 1
-            };
-        });
-        var pub = redis.createClient();
-        var sub = redis.createClient();
-        var numErrs = 0;
-        clock = sinon.useFakeTimers();
-        var dt = new DTimer('me', pub, sub);
-        dt.join(function (err) {
-            assert.ok(err instanceof Error);
-            numErrs++;
-            if (numErrs === 2) {
-                done();
-            }
-        });
-        dt.leave(function (err) {
-            assert.ok(err instanceof Error);
-            numErrs++;
-            if (numErrs === 2) {
-                done();
-            }
-        });
-        clock.tick(30*1000);
-    });
-
-    it('post()/cancel() should fail when lured state does not change in 30 secs', function (done) {
-        sandbox.stub(require('lured'), 'create', function() {
-            return {
-                on: function () {},
-                load: function (cb) { process.nextTick(cb); },
-                state: 1
-            };
-        });
-        var pub = redis.createClient();
-        var sub = redis.createClient();
-        var numErrs = 0;
-        clock = sinon.useFakeTimers();
-        var dt = new DTimer('me', pub, sub);
-        dt.post({msg:'hi'}, 1000, function (err) {
-            assert.ok(err instanceof Error);
-            numErrs++;
-            if (numErrs === 2) {
-                done();
-            }
-        });
-        dt.cancel(9, function (err) {
-            assert.ok(err instanceof Error);
-            numErrs++;
-            if (numErrs === 2) {
-                done();
-            }
-        });
-        clock.tick(30*1000);
-    });
-
     it('Attempts to post non-object event should throw', function () {
-        sandbox.stub(require('lured'), 'create', function() {
+        sandbox.stub(require('lured'), 'create', function () {
             return {
                 on: function () {},
                 load: function (cb) { process.nextTick(cb); },
@@ -243,5 +184,35 @@ describe('ApiTests', function () {
         },
             "unexpected error"
         );
+    });
+
+    it('Attempts to post with invalid event ID should throw', function () {
+        sandbox.stub(require('lured'), 'create', function () {
+            return {
+                on: function () {},
+                load: function (cb) { process.nextTick(cb); },
+                state: 3
+            };
+        });
+        var pub = redis.createClient();
+        var dt = new DTimer('me', pub, null);
+        assert.throws(function () {
+            dt.post({ id: 666 /*bad*/ }, 1000, function () {});
+        }, Error);
+    });
+
+    it('Attempts to post with invalid maxRetries should throw', function () {
+        sandbox.stub(require('lured'), 'create', function () {
+            return {
+                on: function () {},
+                load: function (cb) { process.nextTick(cb); },
+                state: 3
+            };
+        });
+        var pub = redis.createClient();
+        var dt = new DTimer('me', pub, null);
+        assert.throws(function () {
+            dt.post({ id: 'should throw', maxRetries: true /*bad*/ }, 1000, function () {});
+        }, Error);
     });
 });

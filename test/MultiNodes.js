@@ -1,9 +1,10 @@
 'use strict';
 
 var DTimer = require('..').DTimer;
-var redis = require("redis");
 var async = require('async');
 var assert = require('assert');
+var Promise = require('bluebird');
+var redis = Promise.promisifyAll(require("redis"));
 
 describe('Multiple nodes', function () {
     var numNodes = 8;
@@ -34,7 +35,7 @@ describe('Multiple nodes', function () {
             ], function (err) {
                 if (err) { return void(cb(err)); }
                 node.dt = new DTimer('ch' + id, node.pub, node.sub);
-                cb(null, node);
+                setTimeout(function () { cb(null, node); }, 100);
             });
         }
 
@@ -94,7 +95,7 @@ describe('Multiple nodes', function () {
                         if (err) { return void(next(err)); }
                         numJoined++;
                         if (numJoined === nodes.length) {
-                            next();
+                            return next();
                         }
                     });
                 });
@@ -103,6 +104,7 @@ describe('Multiple nodes', function () {
                 var since = Date.now();
                 evts.forEach(function (evt) {
                     nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
+                        assert.ifError(err);
                         evt.id = evId;
                         evt.postDelay = Date.now() - since;
                         evt.posted = true;
@@ -127,6 +129,7 @@ describe('Multiple nodes', function () {
             },
             function (next) {
                 nodes[0].pub.llen('dt:ch', function (err, reply) {
+                    assert.ifError(err);
                     assert.equal(reply, 8);
                     next();
                 });
@@ -137,7 +140,7 @@ describe('Multiple nodes', function () {
                     node.dt.leave(function () {
                         numLeft ++;
                         if (numLeft === nodes.length) {
-                            next();
+                            return next();
                         }
                     });
                 });
@@ -147,7 +150,7 @@ describe('Multiple nodes', function () {
             assert.ifError(err);
             evts.forEach(function (evt) {
                 assert.ok(evt.posted);
-                assert.deepEqual(evt.msg, evt.rcvd);
+                assert.deepEqual(evt.msg.msg, evt.rcvd.msg);
                 assert(evt.elapsed < evt.delay + 200);
                 assert(evt.elapsed > evt.delay);
             });
@@ -183,7 +186,7 @@ describe('Multiple nodes', function () {
                         if (err) { return void(next(err)); }
                         numJoined++;
                         if (numJoined === nodes.length) {
-                            next();
+                            return next();
                         }
                     });
                 });
@@ -192,6 +195,7 @@ describe('Multiple nodes', function () {
                 var since = Date.now();
                 evts.forEach(function (evt) {
                     nodes[0].dt.post(evt.msg, evt.delay, function (err, evId) {
+                        assert.ifError(err);
                         evt.id = evId;
                         evt.postDelay = Date.now() - since;
                         evt.posted = true;
@@ -216,6 +220,7 @@ describe('Multiple nodes', function () {
             },
             function (next) {
                 nodes[0].pub.llen('dt:ch', function (err, reply) {
+                    assert.ifError(err);
                     assert.equal(reply, 8);
                     next();
                 });
@@ -226,7 +231,7 @@ describe('Multiple nodes', function () {
                     node.dt.leave(function () {
                         numLeft ++;
                         if (numLeft === nodes.length) {
-                            next();
+                            return next();
                         }
                     });
                 });
@@ -236,7 +241,7 @@ describe('Multiple nodes', function () {
             assert.ifError(err);
             evts.forEach(function (evt) {
                 assert.ok(evt.posted);
-                assert.deepEqual(evt.msg, evt.rcvd);
+                assert.deepEqual(evt.msg.msg, evt.rcvd.msg);
                 assert(evt.elapsed < evt.delay + 200);
                 assert(evt.elapsed > evt.delay);
             });
