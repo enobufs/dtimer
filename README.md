@@ -63,12 +63,10 @@ post(ev, delay [, cb]) => {Promise}
         * {number} [ev.maxRetries] - Maximum number of retries that occur if confirm() is not
           made within confTimeout [sec]. If not present, it defaults to 0 (no retry).
     * {number} delay - Delay value in milliseconds.
-    * {function} [cb] - Callback made when the post operation is complete. The callback function
-      takes following args:
-        * {Error} err - Error object. Null is set on sucess.
-        * {string} evId - Event ID assigned to the posted event. If ev object already had id
-          property, this evId is identical to ev.id always.
+    * {function} [cb] - Callback made when the post operation is complete.
     * returns Promise if cb is not supplied.
+        * Resolved value: evId {string} - Event ID assigned to the posted event. If ev object
+          already had id property, this evId is identical to ev.id always.
 ```
 
 > The `ev` object may have user-defined properties as its own properties, however, the following properties are reserved and used by dtimer; 'id', 'maxRetries' and '_numRetries'. If your appkication needs to use these names (for application specific use), then consider putting all user-defined event object inside the `ev` like this:
@@ -83,9 +81,21 @@ post(ev, delay [, cb]) => {Promise}
 ```
 
 
+#### peek() - Peek an event scheduled.
+```
+peek(evId [, cb]) => {Promise}
+    * {string} evId - The event ID to be canceled.
+    * {function} [cb] - Callback made when the operation is complete.
+    * returns Promise if cb is not supplied.
+        * Resolved value: results {array} An array of results.
+            * results[0] {number} Time to expire in milliseconds, or null if the event does
+              not exit.
+            * results[1] {object} Event object, or null if the event does not exit.
+```
+
 #### cancel() - Cancel an event by its event ID.
 ```
-cancel(evId [, cb])
+cancel(evId [, cb]) => {Promise}
     * {string} evId - The event ID to be canceled.
     * {function} [cb] - Callback made when the operation is complete.
     * returns Promise if cb is not supplied.
@@ -103,7 +113,7 @@ confirm(evId [, cb])
 
 #### changeDelay() - Change delay of specified event.
 ```
-changeDelay(evId, delay, [, cb])
+changeDelay(evId, delay, [, cb]) => {Promise}
     * {string} evId - The event ID for which the delay will be changed.
     * {number} delay - New delay (in milliseconds relative to the current time).
     * {function} [cb] - Callback made when the operation is complete.
@@ -183,6 +193,14 @@ var sub = redis.createClient();
 var dt = new DTimer('ch1', pub, sub)
 dt.on('event', function (ev) {
 	// do something with ev
+
+    // If the posted event has `maxRetries` property set to a number greater than 0,
+    // you must call confirm() with its event ID. If not confirmed, the event will
+    // fire in `confTimeout` (default 10 sec) again, until the number of retries
+    // becomes `maxRetries`.
+    dt.confirm(ev.id, function (err) {
+        // confirmed.
+    });
 })
 dt.on('error', function (err) {
 	// handle error
@@ -200,6 +218,7 @@ dt.post({id: 'myId', maxRetries: 3, msg:'hello'}, 200, function (err) {
 		return;
 	}
 	// posted the event successfully
+
 	// If you need to cancel this event, then do:
 	//dt.cancel('myId', function (err) {...});
 })

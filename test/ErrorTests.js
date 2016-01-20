@@ -108,8 +108,8 @@ describe('Error tests', function () {
         sandbox.stub(pub, 'multi', function () {
             var multi = {
                 evalsha: function () { return multi; },
-                exec: function (cb) {
-                    cb(new Error('fake error'));
+                execAsync: function () {
+                    return Promise.reject(new Error('fake error'));
                 }
             };
             return multi;
@@ -117,6 +117,7 @@ describe('Error tests', function () {
 
         dt.cancel('myEvent', function (err) {
             assert.ok(err);
+            assert.equal(err.name, 'Error');
             done();
         });
     });
@@ -136,8 +137,8 @@ describe('Error tests', function () {
         sandbox.stub(pub, 'multi', function () {
             var multi = {
                 evalsha: function () { return multi; },
-                exec: function (cb) {
-                    cb(new Error('fake error'));
+                execAsync: function () {
+                    return Promise.reject(new Error('fake error'));
                 }
             };
             return multi;
@@ -145,6 +146,7 @@ describe('Error tests', function () {
 
         dt.confirm('myEvent', function (err) {
             assert.ok(err);
+            assert.equal(err.name, 'Error');
             done();
         });
     });
@@ -164,8 +166,8 @@ describe('Error tests', function () {
         sandbox.stub(pub, 'multi', function () {
             var multi = {
                 evalsha: function () { return multi; },
-                exec: function (cb) {
-                    cb(new Error('fake error'));
+                execAsync: function () {
+                    return Promise.reject(new Error('fake error'));
                 }
             };
             return multi;
@@ -173,6 +175,7 @@ describe('Error tests', function () {
 
         dt.changeDelay('myEvent', 1000, function (err) {
             assert.ok(err);
+            assert.equal(err.name, 'Error');
             done();
         });
     });
@@ -198,10 +201,8 @@ describe('Error tests', function () {
                 hset:   function () { return this; },
                 hdel:   function () { return this; },
                 evalsha:function () { return this; },
-                exec: function (cb) {
-                    process.nextTick(function () {
-                        cb(new Error('fake err'));
-                    });
+                execAsync: function () {
+                    return Promise.reject(new Error('fake err'));
                 },
             };
             return m;
@@ -209,6 +210,7 @@ describe('Error tests', function () {
 
         dt.join(function (err) {
             assert.ok(err);
+            assert.equal(err.name, 'Error');
             done();
         });
     });
@@ -223,10 +225,8 @@ describe('Error tests', function () {
                 hset:   function () { return this; },
                 hdel:   function () { return this; },
                 evalsha:function () { return this; },
-                exec: function (cb) {
-                    process.nextTick(function () {
-                        cb(new Error('fake err'));
-                    });
+                execAsync: function () {
+                    return Promise.reject(new Error('fake err'));
                 },
             };
             return m;
@@ -234,6 +234,31 @@ describe('Error tests', function () {
 
         dt.post({}, 200, function (err) {
             assert.ok(err);
+            assert.equal(err.name, 'Error');
+            done();
+        });
+    });
+
+    it('#post - multi (in-result) error', function (done) {
+        sandbox.stub(pub, 'multi', function () {
+            var m = {
+                lrem:   function () { return this; },
+                lpush:  function () { return this; },
+                zadd:   function () { return this; },
+                zrem:   function () { return this; },
+                hset:   function () { return this; },
+                hdel:   function () { return this; },
+                evalsha:function () { return this; },
+                execAsync: function () {
+                    return Promise.resolve(['ERR fakeed', 1, 1]);
+                },
+            };
+            return m;
+        });
+
+        dt.post({}, 200, function (err) {
+            assert.ok(err);
+            assert.equal(err.name, 'Error');
             done();
         });
     });
