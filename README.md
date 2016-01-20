@@ -19,7 +19,7 @@ In a clustered server environment, you'd occasionally need to process a task aft
 
 ## Requirements
 * Requires Redis version 2.6.0 or later (dtimer uses lua)
-* The redis module NUST be promisified at module level in advance, even legacy callback style is used.
+* The redis module MUST be promisified at module level in advance, even legacy callback style is used.
 ```js
 var Promise = require('bluebird');
 var redis = Promise.promisifyAll(require('redis'));
@@ -37,7 +37,7 @@ var redis = Promise.promisifyAll(require('redis'));
     * {number} maxEvents The maximum number of events this instance wants to received at a time. Defaults to 8. You may change this value later with the setter, `maxEvents`
     * {number} confTimeout Confirmation wait timeout in seconds. Defaults to 10 [sec].
 
-> The redis module MUST be promsified before instantiating clients for `pub` and `sub`. See the example below.
+> The redis module MUST be promisified before instantiating clients for `pub` and `sub`. See the example below.
 
 ### Instance method
 #### join() - Start listening to events. 
@@ -69,7 +69,7 @@ post(ev, delay [, cb]) => {Promise}
           already had id property, this evId is identical to ev.id always.
 ```
 
-> The `ev` object may have user-defined properties as its own properties, however, the following properties are reserved and used by dtimer; 'id', 'maxRetries' and '_numRetries'. If your appkication needs to use these names (for application specific use), then consider putting all user-defined event object inside the `ev` like this:
+> The `ev` object may have user-defined properties as its own properties, however, the following properties are reserved and used by dtimer; 'id', 'maxRetries' and '_numRetries'. If your application needs to use these names (for application specific use), then consider putting all user-defined event object inside the `ev` like this:
 
 ```js
 {
