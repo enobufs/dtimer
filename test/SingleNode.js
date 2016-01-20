@@ -384,6 +384,68 @@ describe('Single node', function () {
         });
     });
 
+    it('Post then peek the event', function (done) {
+        var evt = { id: 'myEvent', msg: 'hello' };
+        var delay = 2000;
+        async.series([
+            function (next) {
+                dt.join(function () {
+                    next();
+                });
+            },
+            function (next) {
+                dt.post(evt, delay, function (err, evId) {
+                    assert.ifError(err);
+                    assert.equal(evId, evt.id);
+
+                    // peek the event right away
+                    dt.peek(evId, function (err, results) {
+                        assert.ifError(err);
+                        assert.ok(Array.isArray(results));
+                        assert.equal(results.length, 2);
+                        assert.equal(typeof results[0], 'number');
+                        assert.ok(results[0] < delay*1.1);
+                        assert.ok(results[0] > delay*0.9);
+                        assert.strictEqual(results[1].id, evt.id);
+                        assert.strictEqual(results[1].msg, evt.msg);
+                        next();
+                    });
+                });
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
+            void(results);
+            done(err);
+        });
+    });
+
+    it('Peek event that does not exist', function (done) {
+        async.series([
+            function (next) {
+                dt.peek('notExist', function (err, results) {
+                    assert.ifError(err);
+                    assert.ok(Array.isArray(results));
+                    assert.equal(results.length, 2);
+                    assert.strictEqual(results[0], null);
+                    assert.strictEqual(results[1], null);
+                    next();
+                });
+            },
+            function (next) {
+                dt.leave(function () {
+                    next();
+                });
+            }
+        ], function (err, results) {
+            void(results);
+            done(err);
+        });
+    });
+
     it('Post then change delay', function (done) {
         var evt = { id: 'myEvent', msg: 'hello' };
         var delay = 500;
