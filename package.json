@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "bluebird": "^3.1.1",
-    "debug": "~1.0.4",
+    "debug": "~2.3.0",
     "lured": "~0.0.2",
     "redis": "~0.12.1",
     "underscore": "~1.6.0",
