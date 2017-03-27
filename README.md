@@ -84,7 +84,7 @@ post(ev, delay [, cb]) => {Promise}
 #### peek() - Peek an event scheduled.
 ```
 peek(evId [, cb]) => {Promise}
-    * {string} evId - The event ID to be canceled.
+    * {string} evId - The event ID to be peeked.
     * {function} [cb] - Callback made when the operation is complete.
     * returns Promise if cb is not supplied.
         * Resolved value: results {array} An array of results.
@@ -105,7 +105,7 @@ cancel(evId [, cb]) => {Promise}
 #### confirm() - Confirm that specified event has been processed.
 ```
 confirm(evId [, cb])
-    * {string} evId - The event ID to be canceled.
+    * {string} evId - The event ID to be confirmed.
     * {function} [cb] - Callback made when the operation is complete.
     * returns Promise if cb is not supplied.
         * Resolved value {number} 0: the event ID not found. 1: the event has been confirmed.
