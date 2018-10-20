@@ -2,3 +2,4 @@
 --reporter spec
 --timeout 20000
 --recursive
+--require ./test/beforeAll.js
