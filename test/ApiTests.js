@@ -104,6 +104,14 @@ describe('ApiTests', function () {
         });
     });
 
+    it('emits ready after redis is setup successfully', function (done) {
+        var pub = redis.createClient();
+        var dt = new DTimer('me', pub, null);
+        dt.on('ready', function () {
+            done();
+        });
+    });
+
     it('Detect malformed message on subscribe', function (done) {
         sandbox.stub(require('lured'), 'create', function () {
             return {

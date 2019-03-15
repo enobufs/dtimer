@@ -165,6 +165,8 @@ upcoming([option] [, cb]) => {Promise}
 
 ### Event types
 
+#### Event: 'ready' - Emitted when the module is ready to process events.
+
 #### Event: 'event' - Emitted when an event is received.
 The handler will be called with the following argument:
 
